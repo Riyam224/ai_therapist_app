@@ -1,0 +1,54 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/app_fonts.dart';
+import '../../../../core/styling/theme_text_styles.dart';
+
+/// Purple avatar circle with initial, name and joined subtitle
+class ProfileAvatarWidget extends StatelessWidget {
+  final String name;
+  final String subtitle;
+
+  const ProfileAvatarWidget({
+    super.key,
+    required this.name,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Avatar circle
+        Container(
+          width: 88.w,
+          height: 88.h,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.primary,
+          ),
+          child: Center(
+            child: Text(
+              name[0].toUpperCase(),
+              style: TextStyle(
+                fontFamily: AppFonts.mainFontName,
+                fontSize: 36.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.whiteTextColor,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: AppSpacing.spaceLg),
+
+        // Name
+        Text(name, style: ThemeTextStyles.headlineSmall(context)),
+        SizedBox(height: AppSpacing.spaceXs),
+
+        // Subtitle
+        Text(subtitle, style: ThemeTextStyles.bodySmall(context)),
+      ],
+    );
+  }
+}
