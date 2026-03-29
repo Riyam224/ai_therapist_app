@@ -1,33 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/styling/app_assets.dart';
-import '../../../../core/styling/app_colors.dart';
+import '../../../../core/injection/injection.dart';
 import '../../../../core/models/mood_entry.dart';
-import 'package:ai_therapist_app/core/widgets/mood_entry_card.dart';
+import '../../../../core/styling/app_colors.dart';
+import '../../../../core/widgets/mood_entry_card.dart';
+import '../../../home/domain/entities/mood_entry_entity.dart';
+import '../../../home/presentation/cubit/mood_cubit.dart';
+import '../../../home/presentation/cubit/mood_state.dart';
 import '../widgets/journal_header_widget.dart';
 import '../widgets/journal_search_bar_widget.dart';
 import '../widgets/journal_emoji_filter_widget.dart';
 
-class JournalHistoryScreen extends StatefulWidget {
+class JournalHistoryScreen extends StatelessWidget {
   const JournalHistoryScreen({super.key});
 
   @override
-  State<JournalHistoryScreen> createState() => _JournalHistoryScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<MoodCubit>()..getHistory(),
+      child: const _JournalBody(),
+    );
+  }
 }
 
-class _JournalHistoryScreenState extends State<JournalHistoryScreen> {
+class _JournalBody extends StatefulWidget {
+  const _JournalBody();
+
+  @override
+  State<_JournalBody> createState() => _JournalBodyState();
+}
+
+class _JournalBodyState extends State<_JournalBody> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedEmoji;
   String _searchQuery = '';
-
-  // Sample entries — replace with real API/Hive data later
-  late final List<MoodEntry> _allEntries;
-
-  @override
-  void initState() {
-    super.initState();
-    _allEntries = _buildSampleEntries();
-  }
 
   @override
   void dispose() {
@@ -35,159 +42,174 @@ class _JournalHistoryScreenState extends State<JournalHistoryScreen> {
     super.dispose();
   }
 
-  List<MoodEntry> _buildSampleEntries() => [
-        MoodEntry(
-          emoji: AppAssets.emojiOverwhelmed,
-          title: 'Overwhelmed with ever...',
-          preview: 'It sounds like you\'re carrying a ...',
-          sideColor: AppColors.primary,
-          date: DateTime.now().subtract(const Duration(hours: 2)),
-          isEmojiImage: true,
-        ),
-        MoodEntry(
-          emoji: AppAssets.moodOkay,
-          title: 'Feeling grateful for sma...',
-          preview: 'That\'s beautiful! Gratitude is...',
-          sideColor: AppColors.moodHappy,
-          date: DateTime.now().subtract(const Duration(days: 1, hours: 3, minutes: 30)),
-          isEmojiImage: true,
-        ),
-        MoodEntry(
-          emoji: AppAssets.emojiAnxious,
-          title: 'Anxious about my futur...',
-          preview: 'Anxiety about the future is very...',
-          sideColor: AppColors.moodAnxious,
-          date: DateTime(2026, 3, 26, 23, 0),
-          isEmojiImage: true,
-        ),
-        MoodEntry(
-          emoji: AppAssets.emojiLonely,
-          title: 'Feeling lonely and misu...',
-          preview: 'Loneliness can feel very heavy...',
-          sideColor: AppColors.moodCalm,
-          date: DateTime(2026, 3, 25, 22, 0),
-          isEmojiImage: true,
-        ),
-        MoodEntry(
-          emoji: AppAssets.emojiCalm,
-          title: 'Finally feeling at peace ...',
-          preview: 'Peace is such a beautiful state...',
-          sideColor: AppColors.moodSad,
-          date: DateTime(2026, 3, 24, 9, 0),
-          isEmojiImage: true,
-        ),
-        MoodEntry(
-          emoji: AppAssets.emojiGrateful,
-          title: 'Grateful for small moments',
-          preview: 'Every small moment counts...',
-          sideColor: AppColors.moodHappy,
-          date: DateTime(2026, 3, 23, 18, 30),
-          isEmojiImage: true,
-        ),
-        MoodEntry(
-          emoji: AppAssets.emojiStressed,
-          title: 'Stressed about work again',
-          preview: 'Work pressure is getting to me...',
-          sideColor: AppColors.moodAnxious,
-          date: DateTime(2026, 3, 22, 20, 0),
-          isEmojiImage: true,
-        ),
-      ];
+  MoodEntry _entityToUiEntry(MoodEntryEntity e) {
+    return MoodEntry(
+      emoji: e.emoji,
+      title: _titleFromThoughts(e.thoughts),
+      preview: e.aiResponse,
+      sideColor: _colorForEmoji(e.emoji),
+      date: e.createdAt,
+      isEmojiImage: false,
+    );
+  }
 
-  List<MoodEntry> get _filteredEntries {
-    return _allEntries.where((entry) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          entry.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          entry.preview.toLowerCase().contains(_searchQuery.toLowerCase());
+  String _titleFromThoughts(String thoughts) {
+    final sentence = thoughts.split(RegExp(r'[.!?]')).first.trim();
+    if (sentence.isEmpty) return thoughts;
+    return sentence.length > 40 ? '${sentence.substring(0, 40)}…' : sentence;
+  }
 
-      final matchesEmoji =
-          _selectedEmoji == null || entry.emoji == _selectedEmoji;
+  Color _colorForEmoji(String emoji) {
+    const map = {
+      '😩': AppColors.primary,
+      '😰': AppColors.moodAnxious,
+      '😤': AppColors.moodSad,
+      '😢': AppColors.moodCalm,
+      '😔': AppColors.primary,
+      '😊': AppColors.moodHappy,
+      '😌': AppColors.lavender,
+      '😃': AppColors.moodHappy,
+      '🤩': AppColors.moodExcited,
+      '🥰': AppColors.blushPink,
+    };
+    return map[emoji] ?? AppColors.moodNeutral;
+  }
 
-      return matchesSearch && matchesEmoji;
-    }).toList();
+  List<MoodEntry> _filterAndMap(List<MoodEntryEntity> entities) {
+    return entities
+        .where((e) {
+          final matchesSearch = _searchQuery.isEmpty ||
+              e.thoughts.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              e.aiResponse.toLowerCase().contains(_searchQuery.toLowerCase());
+          final matchesEmoji =
+              _selectedEmoji == null || e.emoji == _selectedEmoji;
+          return matchesSearch && matchesEmoji;
+        })
+        .map(_entityToUiEntry)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredEntries;
+    return BlocBuilder<MoodCubit, MoodState>(
+      builder: (context, state) {
+        final allEntities = state is MoodHistorySuccess
+            ? state.entries
+            : <MoodEntryEntity>[];
+        final filtered = _filterAndMap(allEntities);
 
-    return CustomScrollView(
-      slivers: [
-        // ── Header ──────────────────────────────────────
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.horizontalPaddingLg,
-            AppSpacing.topPaddingSafeArea,
-            AppSpacing.horizontalPaddingLg,
-            AppSpacing.verticalPaddingMd,
-          ),
-          sliver: SliverToBoxAdapter(
-            child: JournalHeaderWidget(entryCount: _allEntries.length),
-          ),
-        ),
-
-        // ── Search bar ───────────────────────────────────
-        SliverPadding(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.horizontalPaddingLg,
-          ),
-          sliver: SliverToBoxAdapter(
-            child: JournalSearchBarWidget(
-              controller: _searchController,
-              onChanged: (query) => setState(() => _searchQuery = query),
-            ),
-          ),
-        ),
-
-        // ── Emoji filter row ─────────────────────────────
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.horizontalPaddingLg,
-            AppSpacing.sectionSpacingSm,
-            AppSpacing.horizontalPaddingLg,
-            AppSpacing.sectionSpacingSm,
-          ),
-          sliver: SliverToBoxAdapter(
-            child: JournalEmojiFilterWidget(
-              selectedEmoji: _selectedEmoji,
-              onEmojiSelected: (emoji) =>
-                  setState(() => _selectedEmoji = emoji),
-            ),
-          ),
-        ),
-
-        // ── Entries list ─────────────────────────────────
-        if (filtered.isEmpty)
-          const SliverFillRemaining(
-            child: Center(child: Text('No entries found')),
-          )
-        else
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(
-              AppSpacing.horizontalPaddingLg,
-              0,
-              AppSpacing.horizontalPaddingLg,
-              AppSpacing.verticalPaddingLg,
-            ),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => Padding(
-                  padding: EdgeInsets.only(bottom: AppSpacing.spaceMd),
-                  child: MoodEntryCard(
-                    emoji: filtered[index].emoji,
-                    title: filtered[index].title,
-                    preview: filtered[index].preview,
-                    sideColor: filtered[index].sideColor,
-                    date: filtered[index].date,
-                    isEmojiImage: filtered[index].isEmojiImage,
-                    onTap: () {},
-                  ),
-                ),
-                childCount: filtered.length,
+        return CustomScrollView(
+          slivers: [
+            // ── Header ──────────────────────────────────────
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.horizontalPaddingLg,
+                AppSpacing.topPaddingSafeArea,
+                AppSpacing.horizontalPaddingLg,
+                AppSpacing.verticalPaddingMd,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: JournalHeaderWidget(entryCount: allEntities.length),
               ),
             ),
-          ),
-      ],
+
+            // ── Search bar ───────────────────────────────────
+            SliverPadding(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.horizontalPaddingLg,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: JournalSearchBarWidget(
+                  controller: _searchController,
+                  onChanged: (query) => setState(() => _searchQuery = query),
+                ),
+              ),
+            ),
+
+            // ── Emoji filter row ─────────────────────────────
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.horizontalPaddingLg,
+                AppSpacing.sectionSpacingSm,
+                AppSpacing.horizontalPaddingLg,
+                AppSpacing.sectionSpacingSm,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: JournalEmojiFilterWidget(
+                  selectedEmoji: _selectedEmoji,
+                  onEmojiSelected: (emoji) =>
+                      setState(() => _selectedEmoji = emoji),
+                ),
+              ),
+            ),
+
+            // ── Loading ──────────────────────────────────────
+            if (state is MoodLoading)
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              )
+
+            // ── Error ────────────────────────────────────────
+            else if (state is MoodError)
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cloud_off_outlined,
+                          size: 48, color: Colors.grey),
+                      const SizedBox(height: 12),
+                      Text(
+                        state.message,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+
+            // ── Empty ────────────────────────────────────────
+            else if (filtered.isEmpty)
+              const SliverFillRemaining(
+                child: Center(
+                  child: Text(
+                    'No entries found',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              )
+
+            // ── Entries list ─────────────────────────────────
+            else
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.horizontalPaddingLg,
+                  0,
+                  AppSpacing.horizontalPaddingLg,
+                  AppSpacing.verticalPaddingLg,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => Padding(
+                      padding: EdgeInsets.only(bottom: AppSpacing.spaceMd),
+                      child: MoodEntryCard(
+                        emoji: filtered[index].emoji,
+                        title: filtered[index].title,
+                        preview: filtered[index].preview,
+                        sideColor: filtered[index].sideColor,
+                        date: filtered[index].date,
+                        isEmojiImage: filtered[index].isEmojiImage,
+                        onTap: () {},
+                      ),
+                    ),
+                    childCount: filtered.length,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

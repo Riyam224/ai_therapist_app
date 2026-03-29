@@ -8,7 +8,6 @@ import 'mood_selector_widget.dart';
 import 'thoughts_input_widget.dart';
 
 /// Combined section for mood selection and thoughts input
-/// Manages the state for both emoji selection and thoughts
 class MoodInputSection extends StatefulWidget {
   const MoodInputSection({super.key});
 
@@ -20,7 +19,6 @@ class _MoodInputSectionState extends State<MoodInputSection> {
   String? _selectedEmojiPath;
   final TextEditingController _thoughtsController = TextEditingController();
 
-  // List of available mood emojis
   static const List<String> _moodEmojis = [
     AppAssets.emojiOverwhelmed,
     AppAssets.emojiAnxious,
@@ -34,6 +32,20 @@ class _MoodInputSectionState extends State<MoodInputSection> {
     AppAssets.emojiExcited,
   ];
 
+  /// Maps asset path → unicode emoji character sent to the API
+  static const Map<String, String> _emojiUnicodeMap = {
+    AppAssets.emojiOverwhelmed: '😩',
+    AppAssets.emojiAnxious: '😰',
+    AppAssets.emojiStressed: '😤',
+    AppAssets.moodAwful: '😢',
+    AppAssets.moodBad: '😔',
+    AppAssets.moodOkay: '😊',
+    AppAssets.emojiCalm: '😌',
+    AppAssets.moodGood: '😃',
+    AppAssets.moodAmazing: '🤩',
+    AppAssets.emojiExcited: '🥰',
+  };
+
   @override
   void dispose() {
     _thoughtsController.dispose();
@@ -41,15 +53,12 @@ class _MoodInputSectionState extends State<MoodInputSection> {
   }
 
   void _onEmojiSelected(String emojiPath) {
-    setState(() {
-      _selectedEmojiPath = emojiPath;
-    });
+    setState(() => _selectedEmojiPath = emojiPath);
   }
 
   void _onTalkToLuna() {
     final thoughts = _thoughtsController.text.trim();
 
-    // Validate inputs
     if (_selectedEmojiPath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -70,11 +79,11 @@ class _MoodInputSectionState extends State<MoodInputSection> {
       return;
     }
 
-    // Navigate to response screen with selected data
     context.push(
       AppRoutes.response,
       extra: {
         'emojiPath': _selectedEmojiPath,
+        'emojiUnicode': _emojiUnicodeMap[_selectedEmojiPath] ?? '😊',
         'thoughts': thoughts,
       },
     );
@@ -85,7 +94,6 @@ class _MoodInputSectionState extends State<MoodInputSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Mood Selector
         Text('YOUR MOOD', style: ThemeTextStyles.labelLarge(context)),
         SizedBox(height: AppSpacing.spaceLg),
         MoodSelectorWidget(
@@ -94,8 +102,6 @@ class _MoodInputSectionState extends State<MoodInputSection> {
           onEmojiSelected: _onEmojiSelected,
         ),
         SizedBox(height: AppSpacing.sectionSpacingMd),
-
-        // Thoughts Input
         Text('SHARE YOUR THOUGHTS', style: ThemeTextStyles.labelLarge(context)),
         SizedBox(height: AppSpacing.spaceLg),
         ThoughtsInputWidget(

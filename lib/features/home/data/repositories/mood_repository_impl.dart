@@ -1,0 +1,72 @@
+import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
+import 'package:logger/logger.dart';
+import '../../../../core/errors/failures.dart';
+import '../../domain/entities/mood_entry_entity.dart';
+import '../../domain/repositories/mood_repository.dart';
+import '../datasources/mood_local_datasource.dart';
+import '../datasources/mood_remote_datasource.dart';
+
+class MoodRepositoryImpl implements MoodRepository {
+  final MoodRemoteDatasource _remote;
+  final MoodLocalDatasource _local;
+  final Logger _logger = Logger();
+
+  MoodRepositoryImpl(this._remote, this._local);
+
+  @override
+  Future<Either<Failure, MoodEntryEntity>> generateResponse({
+    required String emoji,
+    required String thoughts,
+  }) async {
+    try {
+      _logger.i('Generating response for emoji: $emoji');
+
+      final model = await _remote.generateResponse({
+        'emoji': emoji,
+        'thoughts': thoughts,
+      });
+
+      // Persist new entry to cache so history is available offline
+      await _local.addEntry(model);
+
+      _logger.i('Response generated and cached: ${model.id}');
+      return Right(model.toEntity());
+    } on DioException catch (e) {
+      _logger.e('DioException: ${e.message}');
+      return Left(ServerFailure(e.message ?? 'Server error occurred'));
+    } catch (e) {
+      _logger.e('Unexpected error: $e');
+      return Left(NetworkFailure('Unexpected error: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<MoodEntryEntity>>> getHistory() async {
+    try {
+      _logger.i('Fetching mood history from API...');
+
+      final models = await _remote.getHistory();
+      // Refresh cache with latest server data
+      await _local.cacheHistory(models);
+
+      _logger.i('Fetched ${models.length} entries from API');
+      return Right(models.map((m) => m.toEntity()).toList());
+    } on DioException catch (e) {
+      _logger.w('API failed, falling back to cache: ${e.message}');
+      return _fallbackToCache(ServerFailure(e.message ?? 'Server error occurred'));
+    } catch (e) {
+      _logger.w('Unexpected error, falling back to cache: $e');
+      return _fallbackToCache(NetworkFailure('Unexpected error: $e'));
+    }
+  }
+
+  Either<Failure, List<MoodEntryEntity>> _fallbackToCache(Failure failure) {
+    final cached = _local.getCachedHistory();
+    if (cached.isNotEmpty) {
+      _logger.i('Returning ${cached.length} cached entries');
+      return Right(cached.map((m) => m.toEntity()).toList());
+    }
+    return Left(failure);
+  }
+}

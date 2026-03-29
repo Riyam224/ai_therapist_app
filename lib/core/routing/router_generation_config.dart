@@ -1,6 +1,9 @@
+import 'package:ai_therapist_app/core/injection/injection.dart';
 import 'package:ai_therapist_app/core/routing/app_routes.dart';
 import 'package:ai_therapist_app/core/navigation/main_shell_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/home/presentation/cubit/mood_cubit.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/journal/presentation/screens/journal_history_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -16,7 +19,6 @@ class RouterGenerationConfig {
           return MainShellScreen(navigationShell: navigationShell);
         },
         branches: [
-          // Home Branch
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -26,7 +28,6 @@ class RouterGenerationConfig {
               ),
             ],
           ),
-          // Journal Branch
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -36,7 +37,6 @@ class RouterGenerationConfig {
               ),
             ],
           ),
-          // Profile Branch
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -49,39 +49,26 @@ class RouterGenerationConfig {
         ],
       ),
 
-      // Standalone routes (outside bottom navigation)
+      // Response screen — standalone, provides its own MoodCubit
       GoRoute(
         name: AppRoutes.response,
         path: AppRoutes.response,
         builder: (context, state) {
-          // Get parameters from navigation
           final extra = state.extra as Map<String, dynamic>?;
           final emojiPath = extra?['emojiPath'] as String?;
-          final thoughts = extra?['thoughts'] as String?;
+          final emojiUnicode = extra?['emojiUnicode'] as String?;
+          final thoughts = extra?['thoughts'] as String? ?? '';
 
-          return ResponseAiScreen(
-            emojiImagePath: emojiPath,
-            thoughts:
-                thoughts ??
-                'I feel very overwhelmed with everything lately and I don\'t know what to do',
+          return BlocProvider(
+            create: (_) => sl<MoodCubit>(),
+            child: ResponseAiScreen(
+              emojiImagePath: emojiPath,
+              emojiUnicode: emojiUnicode,
+              thoughts: thoughts,
+            ),
           );
         },
       ),
-
-      // Auth routes (commented out for now)
-      // GoRoute(
-      //   name: AppRoutes.loginScreen,
-      //   path: AppRoutes.loginScreen,
-      //   builder: (context, state) => BlocProvider(
-      //     create: (context) => sl<AuthCubit>(),
-      //     child: const LoginScreen(),
-      //   ),
-      // ),
-      // GoRoute(
-      //   name: AppRoutes.registerScreen,
-      //   path: AppRoutes.registerScreen,
-      //   builder: (context, state) => const RegisterScreen(),
-      // ),
     ],
   );
 }

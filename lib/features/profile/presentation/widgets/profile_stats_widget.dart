@@ -95,7 +95,6 @@ class _StatCard extends StatelessWidget {
                     TextSpan(
                       text: ' $emoji',
                       style: TextStyle(
-                        fontFamily: AppFonts.mainFontName,
                         fontFamilyFallback: _emojiFallback,
                         fontSize: 18.sp,
                         color: AppColors.primary,

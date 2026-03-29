@@ -26,10 +26,10 @@ class _AfterFeelingSelectorWidgetState
   static const int _negativeIndex = 3;
 
   static const List<({String asset, String label})> _feelings = [
-    (asset: AppAssets.emojiRelaxed,  label: 'Calm'),
+    (asset: AppAssets.emojiRelaxed, label: 'Calm'),
     (asset: AppAssets.emojiGrateful, label: 'Loved'),
-    (asset: AppAssets.moodOkay,      label: 'Better'),
-    (asset: AppAssets.moodAwful,     label: 'Still sad'),
+    (asset: AppAssets.moodOkay, label: 'Better'),
+    (asset: AppAssets.moodAwful, label: 'Still sad'),
   ];
 
   void _onSelect(int index) {
@@ -98,7 +98,6 @@ class _AfterFeelingSelectorWidgetState
             ),
           ),
           SizedBox(height: AppSpacing.spaceLg),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(
@@ -133,7 +132,14 @@ class _CelebrationOverlayState extends State<_CelebrationOverlay>
   final List<_Particle> _particles = [];
   final Random _rng = Random();
 
-  static const List<String> _celebrationEmojis = ['✨', '💜', '🌸', '⭐', '💫', '🎉'];
+  static const List<String> _celebrationEmojis = [
+    '✨',
+    '💜',
+    '🌸',
+    '⭐',
+    '💫',
+    '🎉'
+  ];
 
   @override
   void initState() {
@@ -169,9 +175,10 @@ class _CelebrationOverlayState extends State<_CelebrationOverlay>
     return IgnorePointer(
       child: AnimatedBuilder(
         animation: _controller,
-        builder: (_, _) => Stack(
+        builder: (_, context) => Stack(
           children: _particles.map((p) {
-            final t = ((_controller.value - p.delay) / (1 - p.delay)).clamp(0.0, 1.0);
+            final t =
+                ((_controller.value - p.delay) / (1 - p.delay)).clamp(0.0, 1.0);
             final opacity = t < 0.7 ? 1.0 : (1.0 - t) / 0.3;
             final y = size.height * 0.85 - (size.height * 0.75 * t);
             final x = size.width * p.x + (size.width * p.drift * t);
@@ -206,10 +213,10 @@ class _CelebrationOverlayState extends State<_CelebrationOverlay>
 
 class _Particle {
   final String emoji;
-  final double x;       // 0–1 horizontal position
-  final double delay;   // 0–0.4 start delay
-  final double size;    // font size
-  final double drift;   // horizontal drift
+  final double x; // 0–1 horizontal position
+  final double delay; // 0–0.4 start delay
+  final double size; // font size
+  final double drift; // horizontal drift
 
   const _Particle({
     required this.emoji,
@@ -316,7 +323,8 @@ class _EncouragementOverlayState extends State<_EncouragementOverlay>
                     // Message
                     Text(
                       'It\'s okay to still feel this way. Luna is always here whenever you need to talk again.',
-                      style: ThemeTextStyles.bodySmall(context).copyWith(height: 1.5),
+                      style: ThemeTextStyles.bodySmall(context)
+                          .copyWith(height: 1.5),
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 24.h),

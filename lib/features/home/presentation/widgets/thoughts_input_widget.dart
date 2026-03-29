@@ -73,9 +73,23 @@ class ThoughtsInputWidget extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: Text(
-              'Talk to Luna ✨',
-              style: ThemeTextStyles.whiteButton(context),
+            child: Text.rich(
+              TextSpan(
+                style: ThemeTextStyles.whiteButton(context),
+                children: [
+                  const TextSpan(text: 'Talk to Luna '),
+                  TextSpan(
+                    text: '✨',
+                    style: TextStyle(
+                      fontFamilyFallback: const [
+                        'Apple Color Emoji',
+                        'Noto Color Emoji',
+                        'Segoe UI Emoji',
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

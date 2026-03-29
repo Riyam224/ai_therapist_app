@@ -84,9 +84,18 @@ class MoodEntryCard extends StatelessWidget {
                       height: AppSizes.iconLg,
                       fit: BoxFit.contain,
                     )
-                  : Text(
-                      emoji,
-                      style: TextStyle(fontSize: 24.sp),
+                  : RichText(
+                      text: TextSpan(
+                        text: emoji,
+                        style: TextStyle(
+                          fontSize: 24.sp,
+                          fontFamilyFallback: const [
+                            'Apple Color Emoji',
+                            'Noto Color Emoji',
+                            'Segoe UI Emoji',
+                          ],
+                        ),
+                      ),
                     ),
             ),
 

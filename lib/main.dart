@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'core/cubits/theme_cubit.dart';
+import 'core/injection/injection.dart';
 import 'core/routing/router_generation_config.dart';
 import 'core/styling/app_theme.dart';
+import 'features/home/data/datasources/mood_local_datasource.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox<String>(MoodLocalDatasource.boxName);
+  setupInjection();
   runApp(const MindEase());
 }
 
