@@ -28,4 +28,11 @@ class MoodLocalDatasource {
     final updated = [entry, ...existing.where((e) => e.id != entry.id)];
     await cacheHistory(updated);
   }
+
+  /// Removes the entry with the given id from the cache.
+  Future<void> deleteEntry(int id) async {
+    final existing = getCachedHistory();
+    final updated = existing.where((e) => e.id != id).toList();
+    await cacheHistory(updated);
+  }
 }

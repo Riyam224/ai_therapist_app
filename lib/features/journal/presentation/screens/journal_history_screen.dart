@@ -44,6 +44,7 @@ class _JournalBodyState extends State<_JournalBody> {
 
   MoodEntry _entityToUiEntry(MoodEntryEntity e) {
     return MoodEntry(
+      id: e.id,
       emoji: e.emoji,
       title: _titleFromThoughts(e.thoughts),
       preview: e.aiResponse,
@@ -191,18 +192,41 @@ class _JournalBodyState extends State<_JournalBody> {
                 ),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) => Padding(
-                      padding: EdgeInsets.only(bottom: AppSpacing.spaceMd),
-                      child: MoodEntryCard(
-                        emoji: filtered[index].emoji,
-                        title: filtered[index].title,
-                        preview: filtered[index].preview,
-                        sideColor: filtered[index].sideColor,
-                        date: filtered[index].date,
-                        isEmojiImage: filtered[index].isEmojiImage,
-                        onTap: () {},
-                      ),
-                    ),
+                    (context, index) {
+                      final entry = filtered[index];
+                      return Dismissible(
+                        key: ValueKey(entry.id),
+                        direction: DismissDirection.endToStart,
+                        onDismissed: (_) {
+                          context.read<MoodCubit>().deleteEntry(entry.id);
+                        },
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade400,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: AppSpacing.spaceMd),
+                          child: MoodEntryCard(
+                            emoji: entry.emoji,
+                            title: entry.title,
+                            preview: entry.preview,
+                            sideColor: entry.sideColor,
+                            date: entry.date,
+                            isEmojiImage: entry.isEmojiImage,
+                            onTap: () {},
+                          ),
+                        ),
+                      );
+                    },
                     childCount: filtered.length,
                   ),
                 ),

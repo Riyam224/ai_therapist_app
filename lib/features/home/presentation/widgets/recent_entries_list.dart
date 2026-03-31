@@ -7,10 +7,12 @@ import 'package:ai_therapist_app/core/widgets/mood_entry_card.dart';
 class RecentEntriesList extends StatelessWidget {
   const RecentEntriesList({
     required this.entries,
+    required this.onDelete,
     super.key,
   });
 
   final List<MoodEntry> entries;
+  final void Function(int id) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -18,19 +20,34 @@ class RecentEntriesList extends StatelessWidget {
       delegate: SliverChildBuilderDelegate(
         (context, index) {
           final entry = entries[index];
-          return Padding(
-            padding: EdgeInsets.only(bottom: AppSpacing.spaceMd),
-            child: MoodEntryCard(
-              emoji: entry.emoji,
-              title: entry.title,
-              preview: entry.preview,
-              sideColor: entry.sideColor,
-              date: entry.date,
-              isEmojiImage: entry.isEmojiImage,
-              onTap: () {
-                // TODO: Navigate to mood entry details
-                debugPrint('Tapped on: ${entry.title}');
-              },
+          return Dismissible(
+            key: ValueKey(entry.id),
+            direction: DismissDirection.endToStart,
+            onDismissed: (_) => onDelete(entry.id),
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              decoration: BoxDecoration(
+                color: Colors.red.shade400,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.white,
+                size: 26,
+              ),
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(bottom: AppSpacing.spaceMd),
+              child: MoodEntryCard(
+                emoji: entry.emoji,
+                title: entry.title,
+                preview: entry.preview,
+                sideColor: entry.sideColor,
+                date: entry.date,
+                isEmojiImage: entry.isEmojiImage,
+                onTap: () {},
+              ),
             ),
           );
         },

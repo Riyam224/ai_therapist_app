@@ -8,12 +8,15 @@ class MoodSelectorWidget extends StatelessWidget {
   final List<String> emojis;
   final String? selectedEmoji;
   final ValueChanged<String> onEmojiSelected;
+  /// Optional per-emoji tint colors — must match [emojis] length if provided.
+  final List<Color>? moodColors;
 
   const MoodSelectorWidget({
     super.key,
     required this.emojis,
     required this.selectedEmoji,
     required this.onEmojiSelected,
+    this.moodColors,
   });
 
   @override
@@ -31,6 +34,9 @@ class MoodSelectorWidget extends StatelessWidget {
               emojiAsset: emojiPath,
               isSelected: selectedEmoji == emojiPath,
               onTap: () => onEmojiSelected(emojiPath),
+              moodColor: moodColors != null && index < moodColors!.length
+                  ? moodColors![index]
+                  : null,
             ),
           );
         },

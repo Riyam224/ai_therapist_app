@@ -39,10 +39,14 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
   void initState() {
     super.initState();
     if (widget.emojiUnicode != null && widget.thoughts.isNotEmpty) {
-      context.read<MoodCubit>().generateResponse(
-        emoji: widget.emojiUnicode!,
-        thoughts: widget.thoughts,
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<MoodCubit>().generateResponse(
+            emoji: widget.emojiUnicode!,
+            thoughts: widget.thoughts,
+          );
+        }
+      });
     }
   }
 

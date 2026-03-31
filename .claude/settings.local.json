@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(curl -sL \"https://api.github.com/repos/googlefonts/nunito/git/trees/main?recursive=1\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(i[''''path'''']\\) for i in data.get\\(''''tree'''',[]\\)]\")"
+    ]
+  }
+}

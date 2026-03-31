@@ -37,7 +37,6 @@ class ProfileStatsWidget extends StatelessWidget {
         _StatCard(
           value: '$dayStreak',
           label: 'Day streak',
-          emoji: '🔥',
         ),
       ],
     );
@@ -47,19 +46,10 @@ class ProfileStatsWidget extends StatelessWidget {
 class _StatCard extends StatelessWidget {
   final String value;
   final String label;
-  final String? emoji;
-
   const _StatCard({
     required this.value,
     required this.label,
-    this.emoji,
   });
-
-  static const _emojiFallback = [
-    'Apple Color Emoji',
-    'Noto Color Emoji',
-    'Segoe UI Emoji',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -91,15 +81,6 @@ class _StatCard extends StatelessWidget {
                       color: AppColors.primary,
                     ),
                   ),
-                  if (emoji != null)
-                    TextSpan(
-                      text: ' $emoji',
-                      style: TextStyle(
-                        fontFamilyFallback: _emojiFallback,
-                        fontSize: 18.sp,
-                        color: AppColors.primary,
-                      ),
-                    ),
                 ],
               ),
             ),

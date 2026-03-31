@@ -1,9 +1,11 @@
 import 'package:ai_therapist_app/core/constants/app_sizes.dart';
 import 'package:ai_therapist_app/core/constants/app_spacing.dart';
+import 'package:ai_therapist_app/core/styling/app_assets.dart';
 import 'package:ai_therapist_app/core/styling/theme_extensions.dart';
 import 'package:ai_therapist_app/core/styling/theme_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 class MoodEntryCard extends StatelessWidget {
@@ -25,6 +27,39 @@ class MoodEntryCard extends StatelessWidget {
     required this.onTap,
     this.isEmojiImage = false,
   });
+
+  Widget _buildEmojiWidget() {
+    // 1. Unicode emoji → look up mapped asset (SVG or PNG)
+    final assetPath = AppAssets.emojiAssetMap[emoji];
+    if (assetPath != null) {
+      if (assetPath.endsWith('.svg')) {
+        return SvgPicture.asset(
+          assetPath,
+          width: AppSizes.iconLg,
+          height: AppSizes.iconLg,
+          fit: BoxFit.contain,
+          colorFilter: ColorFilter.mode(sideColor, BlendMode.srcIn),
+        );
+      }
+      return Image.asset(assetPath, width: AppSizes.iconLg, height: AppSizes.iconLg, fit: BoxFit.contain);
+    }
+    // 2. Already an asset path (isEmojiImage = true)
+    if (isEmojiImage) {
+      if (emoji.endsWith('.svg')) {
+        final svgColor = AppAssets.moodSvgColors[emoji];
+        return SvgPicture.asset(
+          emoji,
+          width: AppSizes.iconLg,
+          height: AppSizes.iconLg,
+          fit: BoxFit.contain,
+          colorFilter: svgColor != null ? ColorFilter.mode(svgColor, BlendMode.srcIn) : null,
+        );
+      }
+      return Image.asset(emoji, width: AppSizes.iconLg, height: AppSizes.iconLg, fit: BoxFit.contain);
+    }
+    // 3. Fallback: raw unicode text
+    return RichText(text: TextSpan(text: emoji, style: TextStyle(fontSize: 24.sp)));
+  }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -77,26 +112,7 @@ class MoodEntryCard extends StatelessWidget {
                 color: extraColors.cardBackgroundColor,
               ),
               alignment: Alignment.center,
-              child: isEmojiImage
-                  ? Image.asset(
-                      emoji,
-                      width: AppSizes.iconLg,
-                      height: AppSizes.iconLg,
-                      fit: BoxFit.contain,
-                    )
-                  : RichText(
-                      text: TextSpan(
-                        text: emoji,
-                        style: TextStyle(
-                          fontSize: 24.sp,
-                          fontFamilyFallback: const [
-                            'Apple Color Emoji',
-                            'Noto Color Emoji',
-                            'Segoe UI Emoji',
-                          ],
-                        ),
-                      ),
-                    ),
+              child: _buildEmojiWidget(),
             ),
 
             SizedBox(width: AppSpacing.spaceMd),

@@ -43,6 +43,7 @@ class _HomeScreenBody extends StatelessWidget {
 
   MoodEntry _entityToUiEntry(BuildContext context, MoodEntryEntity e) {
     return MoodEntry(
+      id: e.id,
       emoji: e.emoji,
       title: _titleFromThoughts(e.thoughts),
       preview: e.thoughts,
@@ -167,7 +168,11 @@ class _HomeScreenBody extends StatelessWidget {
                   AppSpacing.horizontalPaddingLg,
                   AppSpacing.verticalPaddingLg,
                 ),
-                sliver: RecentEntriesList(entries: entries),
+                sliver: RecentEntriesList(
+                  entries: entries,
+                  onDelete: (id) =>
+                      context.read<MoodCubit>().deleteEntry(id),
+                ),
               ),
           ],
         );

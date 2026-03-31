@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/styling/app_assets.dart';
 import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/app_fonts.dart';
 import '../../../../core/styling/theme_text_styles.dart';
@@ -51,11 +53,16 @@ class UserMoodCardWidget extends StatelessWidget {
             children: [
               // Emoji
               if (isEmojiImage)
-                Image.asset(
-                  emoji,
-                  width: 32.w,
-                  height: 32.h,
-                )
+                (emoji.endsWith('.svg')
+                    ? SvgPicture.asset(
+                        emoji,
+                        width: 32.w,
+                        height: 32.h,
+                        colorFilter: AppAssets.moodSvgColors[emoji] != null
+                            ? ColorFilter.mode(AppAssets.moodSvgColors[emoji]!, BlendMode.srcIn)
+                            : null,
+                      )
+                    : Image.asset(emoji, width: 32.w, height: 32.h))
               else
                 Text(
                   emoji,

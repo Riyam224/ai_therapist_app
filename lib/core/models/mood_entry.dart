@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MoodEntry {
+  final int id;
   final String emoji; // Can be emoji text or image path
   final String title;
   final String preview;
@@ -9,6 +10,7 @@ class MoodEntry {
   final bool isEmojiImage; // Flag to indicate if emoji is an image path
 
   const MoodEntry({
+    required this.id,
     required this.emoji,
     required this.title,
     required this.preview,

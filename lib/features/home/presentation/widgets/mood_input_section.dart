@@ -19,31 +19,31 @@ class _MoodInputSectionState extends State<MoodInputSection> {
   String? _selectedEmojiPath;
   final TextEditingController _thoughtsController = TextEditingController();
 
+  // 5 illustrated SVG moods shown on the home screen selector
   static const List<String> _moodEmojis = [
-    AppAssets.emojiOverwhelmed,
-    AppAssets.emojiAnxious,
-    AppAssets.emojiStressed,
     AppAssets.moodAwful,
-    AppAssets.moodBad,
+    AppAssets.moodMeh,
     AppAssets.moodOkay,
-    AppAssets.emojiCalm,
     AppAssets.moodGood,
-    AppAssets.moodAmazing,
-    AppAssets.emojiExcited,
+    AppAssets.moodGreat,
+  ];
+
+  // Per-emoji tint colors matching the OpenMoji outlined SVG style
+  static const List<Color> _moodColors = [
+    Color(0xFF6B8CBA), // Awful  — blue-slate
+    Color(0xFF9E9E9E), // Meh    — gray
+    Color(0xFF5E9E73), // Okay   — green
+    Color(0xFFCF9B3A), // Good   — amber
+    Color(0xFF7C6FCD), // Great  — soft purple
   ];
 
   /// Maps asset path → unicode emoji character sent to the API
   static const Map<String, String> _emojiUnicodeMap = {
-    AppAssets.emojiOverwhelmed: '😩',
-    AppAssets.emojiAnxious: '😰',
-    AppAssets.emojiStressed: '😤',
     AppAssets.moodAwful: '😢',
-    AppAssets.moodBad: '😔',
-    AppAssets.moodOkay: '😊',
-    AppAssets.emojiCalm: '😌',
-    AppAssets.moodGood: '😃',
-    AppAssets.moodAmazing: '🤩',
-    AppAssets.emojiExcited: '🥰',
+    AppAssets.moodMeh:   '😔',
+    AppAssets.moodOkay:  '😊',
+    AppAssets.moodGood:  '😃',
+    AppAssets.moodGreat: '🤩',
   };
 
   @override
@@ -100,6 +100,7 @@ class _MoodInputSectionState extends State<MoodInputSection> {
           emojis: _moodEmojis,
           selectedEmoji: _selectedEmojiPath,
           onEmojiSelected: _onEmojiSelected,
+          moodColors: _moodColors,
         ),
         SizedBox(height: AppSpacing.sectionSpacingMd),
         Text('SHARE YOUR THOUGHTS', style: ThemeTextStyles.labelLarge(context)),

@@ -1,6 +1,6 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/styling/app_assets.dart';
 import '../../../../core/styling/app_colors.dart';
@@ -9,7 +9,7 @@ import '../../../../core/styling/theme_text_styles.dart';
 import '../../../../core/constants/app_spacing.dart';
 import 'package:go_router/go_router.dart';
 
-/// After-feeling selector with celebration or encouragement overlay
+/// After-feeling selector — tapping any emoji shows a floating modal.
 class AfterFeelingSelectorWidget extends StatefulWidget {
   const AfterFeelingSelectorWidget({super.key});
 
@@ -22,61 +22,74 @@ class _AfterFeelingSelectorWidgetState
     extends State<AfterFeelingSelectorWidget> {
   int? _selectedIndex;
 
-  // Index 3 = negative (Still sad) — rest are positive
   static const int _negativeIndex = 3;
 
-  static const List<({String asset, String label})> _feelings = [
-    (asset: AppAssets.emojiRelaxed, label: 'Calm'),
-    (asset: AppAssets.emojiGrateful, label: 'Loved'),
-    (asset: AppAssets.moodOkay, label: 'Better'),
-    (asset: AppAssets.moodAwful, label: 'Still sad'),
+  static const List<({String asset, String label, String message})> _feelings =
+      [
+    (
+      asset: AppAssets.moodOkay,
+      label: 'Calm',
+      message: 'Feeling calm is a beautiful shift. You did great.',
+    ),
+    (
+      asset: AppAssets.moodGreat,
+      label: 'Loved',
+      message: 'You deserve every bit of that love. Hold onto it.',
+    ),
+    (
+      asset: AppAssets.moodGood,
+      label: 'Better',
+      message: 'Every small step forward counts. You are making progress.',
+    ),
+    (
+      asset: AppAssets.moodAwful,
+      label: 'Still sad',
+      message:
+          'It\'s okay to still feel this way. Luna is always here whenever you need to talk again.',
+    ),
   ];
 
   void _onSelect(int index) {
     final wasAlreadySelected = _selectedIndex == index;
-    setState(() {
-      _selectedIndex = wasAlreadySelected ? null : index;
-    });
-
+    setState(() => _selectedIndex = wasAlreadySelected ? null : index);
     if (wasAlreadySelected) return;
-
-    if (index == _negativeIndex) {
-      _showEncouragementMessage();
-    } else {
-      _showCelebrationOverlay();
-    }
+    _showMoodModal(index);
   }
 
-  // ── Celebration overlay (positive mood) ─────────────────────────────────────
-  void _showCelebrationOverlay() {
-    final overlay = Overlay.of(context);
-    late OverlayEntry entry;
+  void _showMoodModal(int index) {
+    final feeling = _feelings[index];
+    final isNegative = index == _negativeIndex;
 
-    entry = OverlayEntry(
-      builder: (_) => _CelebrationOverlay(
-        onDone: () => entry.remove(),
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionBuilder: (_, anim, __, child) {
+        final curved =
+            CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
+        return ScaleTransition(
+          scale: Tween<double>(begin: 0.85, end: 1.0).animate(curved),
+          child: FadeTransition(
+            opacity: anim,
+            child: child,
+          ),
+        );
+      },
+      pageBuilder: (ctx, _, __) => _MoodModal(
+        asset: feeling.asset,
+        label: feeling.label,
+        message: feeling.message,
+        isNegative: isNegative,
+        onTalkAgain: isNegative
+            ? () {
+                Navigator.of(ctx).pop();
+                context.go(AppRoutes.home);
+              }
+            : null,
       ),
     );
-
-    overlay.insert(entry);
-  }
-
-  // ── Encouragement message (negative mood) ────────────────────────────────────
-  void _showEncouragementMessage() {
-    final overlay = Overlay.of(context);
-    late OverlayEntry entry;
-
-    entry = OverlayEntry(
-      builder: (_) => _EncouragementOverlay(
-        onTalkAgain: () {
-          entry.remove();
-          context.go(AppRoutes.home);
-        },
-        onDismiss: () => entry.remove(),
-      ),
-    );
-
-    overlay.insert(entry);
   }
 
   @override
@@ -116,255 +129,119 @@ class _AfterFeelingSelectorWidgetState
   }
 }
 
-// ── Floating celebration particles ───────────────────────────────────────────
+// ── Floating mood modal ───────────────────────────────────────────────────────
 
-class _CelebrationOverlay extends StatefulWidget {
-  final VoidCallback onDone;
-  const _CelebrationOverlay({required this.onDone});
+class _MoodModal extends StatelessWidget {
+  final String asset;
+  final String label;
+  final String message;
+  final bool isNegative;
+  final VoidCallback? onTalkAgain;
 
-  @override
-  State<_CelebrationOverlay> createState() => _CelebrationOverlayState();
-}
-
-class _CelebrationOverlayState extends State<_CelebrationOverlay>
-    with TickerProviderStateMixin {
-  late final AnimationController _controller;
-  final List<_Particle> _particles = [];
-  final Random _rng = Random();
-
-  static const List<String> _celebrationEmojis = [
-    '✨',
-    '💜',
-    '🌸',
-    '⭐',
-    '💫',
-    '🎉'
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Spawn 12 particles at random horizontal positions
-    for (int i = 0; i < 12; i++) {
-      _particles.add(_Particle(
-        emoji: _celebrationEmojis[_rng.nextInt(_celebrationEmojis.length)],
-        x: _rng.nextDouble(),
-        delay: _rng.nextDouble() * 0.4,
-        size: 20 + _rng.nextDouble() * 20,
-        drift: (_rng.nextDouble() - 0.5) * 0.15,
-      ));
-    }
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..forward().whenComplete(widget.onDone);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const _MoodModal({
+    required this.asset,
+    required this.label,
+    required this.message,
+    required this.isNegative,
+    this.onTalkAgain,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    return Center(
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 28.w),
+          padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 32.h),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(28.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 32,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Emoji face — on dark mode wrap in a light circle so SVG fills show up
+              Builder(builder: (context) {
+                final isDark =
+                    Theme.of(context).brightness == Brightness.dark;
+                final img = asset.endsWith('.svg')
+                    ? SvgPicture.asset(asset, width: 72.w, height: 72.h)
+                    : Image.asset(asset, width: 72.w, height: 72.h);
+                if (!isDark) return img;
+                return Container(
+                  width: 88.w,
+                  height: 88.w,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFF0ECFF),
+                  ),
+                  alignment: Alignment.center,
+                  child: img,
+                );
+              }),
+              SizedBox(height: 16.h),
 
-    return IgnorePointer(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (_, context) => Stack(
-          children: _particles.map((p) {
-            final t =
-                ((_controller.value - p.delay) / (1 - p.delay)).clamp(0.0, 1.0);
-            final opacity = t < 0.7 ? 1.0 : (1.0 - t) / 0.3;
-            final y = size.height * 0.85 - (size.height * 0.75 * t);
-            final x = size.width * p.x + (size.width * p.drift * t);
+              // Feeling label
+              Text(
+                isNegative ? 'Take your time' : 'You are feeling $label',
+                style: ThemeTextStyles.titleLarge(context),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 10.h),
 
-            return Positioned(
-              left: x,
-              top: y,
-              child: Opacity(
-                opacity: opacity.clamp(0.0, 1.0),
-                child: Text(
-                  p.emoji,
-                  style: TextStyle(
-                    // fontFamilyFallback ensures emoji render via the system
-                    // emoji font (Apple Color Emoji / Noto) since Urbanist
-                    // does not include emoji glyphs
-                    fontFamilyFallback: const [
-                      'Apple Color Emoji',
-                      'Noto Color Emoji',
-                      'Segoe UI Emoji',
-                    ],
-                    fontSize: p.size.sp,
+              // Message
+              Text(
+                message,
+                style: ThemeTextStyles.bodySmall(context)
+                    .copyWith(height: 1.6),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 28.h),
+
+              // Primary action
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: isNegative
+                      ? onTalkAgain
+                      : () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.whiteTextColor,
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                  ),
+                  child: Text(
+                    isNegative ? 'Talk to Luna again' : 'Thank you, Luna',
+                    style: ThemeTextStyles.labelMedium(context).copyWith(
+                      color: AppColors.whiteTextColor,
+                    ),
                   ),
                 ),
               ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-}
 
-class _Particle {
-  final String emoji;
-  final double x; // 0–1 horizontal position
-  final double delay; // 0–0.4 start delay
-  final double size; // font size
-  final double drift; // horizontal drift
-
-  const _Particle({
-    required this.emoji,
-    required this.x,
-    required this.delay,
-    required this.size,
-    required this.drift,
-  });
-}
-
-// ── Floating encouragement message ───────────────────────────────────────────
-
-class _EncouragementOverlay extends StatefulWidget {
-  final VoidCallback onTalkAgain;
-  final VoidCallback onDismiss;
-
-  const _EncouragementOverlay({
-    required this.onTalkAgain,
-    required this.onDismiss,
-  });
-
-  @override
-  State<_EncouragementOverlay> createState() => _EncouragementOverlayState();
-}
-
-class _EncouragementOverlayState extends State<_EncouragementOverlay>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<Offset> _slide;
-  late final Animation<double> _fade;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-    _slide = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _dismiss() async {
-    await _controller.reverse();
-    widget.onDismiss();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _dismiss,
-      behavior: HitTestBehavior.opaque,
-      child: Material(
-        color: Colors.black.withValues(alpha: 0.35),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fade,
-            child: SlideTransition(
-              position: _slide,
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 32.w),
-                padding: EdgeInsets.all(28.w),
-                decoration: BoxDecoration(
-                  color: AppColors.whiteBackground,
-                  borderRadius: BorderRadius.circular(24.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+              if (isNegative) ...[
+                SizedBox(height: 8.h),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'I\'ll be okay',
+                    style: ThemeTextStyles.bodySmall(context),
+                  ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Emoji image
-                    Image.asset(
-                      AppAssets.emojiCalm,
-                      width: 64.w,
-                      height: 64.h,
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // Title
-                    Text(
-                      'Take a deep breath 🌬️',
-                      style: ThemeTextStyles.titleLarge(context),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 10.h),
-
-                    // Message
-                    Text(
-                      'It\'s okay to still feel this way. Luna is always here whenever you need to talk again.',
-                      style: ThemeTextStyles.bodySmall(context)
-                          .copyWith(height: 1.5),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 24.h),
-
-                    // Talk again button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: widget.onTalkAgain,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.whiteTextColor,
-                          elevation: 0,
-                          padding: EdgeInsets.symmetric(vertical: 14.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14.r),
-                          ),
-                        ),
-                        child: Text(
-                          'Talk to Luna again ✨',
-                          style: ThemeTextStyles.labelMedium(context).copyWith(
-                            color: AppColors.whiteTextColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10.h),
-
-                    // Dismiss
-                    TextButton(
-                      onPressed: _dismiss,
-                      child: Text(
-                        'I\'ll be okay',
-                        style: ThemeTextStyles.bodySmall(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+              ],
+            ],
           ),
         ),
       ),
@@ -410,12 +287,16 @@ class _EmojiOption extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              asset,
-              width: 36.w,
-              height: 36.h,
-              fit: BoxFit.contain,
-            ),
+            // No colorFilter — render SVG in its original colors
+            asset.endsWith('.svg')
+                ? SvgPicture.asset(
+                    asset,
+                    width: 36.w,
+                    height: 36.h,
+                    fit: BoxFit.contain,
+                  )
+                : Image.asset(asset, width: 36.w, height: 36.h,
+                    fit: BoxFit.contain),
             SizedBox(height: 4.h),
             Text(
               label,

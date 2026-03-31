@@ -1,35 +1,44 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary Brand Colors
-  static const Color primary = Color(0xFFAB7BE8);
-  static const Color primaryLight = Color(0xFFC8B4F8);
-  static const Color primaryDark = Color(0xFF4A2A6A);
+  // ── Light Theme ──────────────────────────────────────────────────────────
+  static const Color lightBackground = Color(0xFFFFF8F5);    // Scaffold
+  static const Color lightSurface = Color(0xFFFFF0E8);       // Cards
+  static const Color primary = Color(0xFFFF8C5A);            // CTA buttons
+  static const Color primaryContainer = Color(0xFF5BBFA0);   // AI bubble, mint
+  static const Color lightOnBackground = Color(0xFF2D2016);  // Headings
+  static const Color lightSecondaryText = Color(0xFF7A5038); // Labels, hints
+  static const Color lightBorder = Color(0xFFFFD4B8);        // Card borders
+  static const Color accent = Color(0xFFFF7096);             // "Great" mood
 
-  // Accent Colors
-  static const Color blushPink = Color(0xFFF8B4C8);
-  static const Color lavender = Color(0xFFC8B4F8);
-  static const Color lilac = Color(0xFFE8D8FF);
+  // ── Dark Theme ───────────────────────────────────────────────────────────
+  static const Color darkBackground = Color(0xFF16132A);     // Scaffold
+  static const Color darkSurface = Color(0xFF1E1A35);        // Cards
+  static const Color primaryDark = Color(0xFF7C5CDB);        // Buttons, accents
+  static const Color darkPrimaryContainer = Color(0xFF221D3E); // AI bubble bg
+  static const Color darkOnBackground = Color(0xFFEDE9FE);   // Primary text
+  static const Color darkSecondaryText = Color(0xFF6B6490);  // Labels, hints
+  static const Color darkBorder = Color(0xFF2D2850);         // Card borders
 
-  // Background Colors
-  static const Color lightBackground = Color(0xFFFFFAFF);
-  static const Color darkBackground = Color(0xFF1A1124);
-  static const Color cardBackground = Color(0xFFF3F0FC);
-  static const Color whiteBackground = Color(0xFFFFFFFF);
+  // ── Aliases (keep existing usages compiling) ─────────────────────────────
+  static const Color primaryLight = Color(0xFFFFB89A);       // lighter peach tint
+  static const Color cardBackground = lightSurface;
+  static const Color whiteBackground = lightSurface;
 
-  // Dark Theme Colors
-  static const Color deepIris = Color(0xFF4A2A6A);
-  static const Color midnight = Color(0xFF1A1124);
-
-  // Text Colors
-  static const Color primaryTextColor = Color(0xFF1A1124);
-  static const Color secondaryTextColor = Color(0xFF7B6B8F);
+  // Text
+  static const Color primaryTextColor = lightOnBackground;
+  static const Color secondaryTextColor = lightSecondaryText;
   static const Color whiteTextColor = Color(0xFFFFFFFF);
   static const Color blackTextColor = Color(0xFF000000);
   static const Color greyTextColor = Color(0xFF9E9E9E);
-  static const Color darkTextColor = Color(0xFF1E1E2D);
+  static const Color darkTextColor = lightOnBackground;
 
-  // Mood Colors (for mood entry cards)
+  // Accent
+  static const Color blushPink = accent;
+  static const Color lavender = Color(0xFFC8B4F8);
+  static const Color lilac = Color(0xFFE8D8FF);
+
+  // Mood Colors
   static const Color moodHappy = Color(0xFF4CAF50);
   static const Color moodCalm = Color(0xFF2196F3);
   static const Color moodSad = Color(0xFFFF9800);
@@ -37,7 +46,7 @@ class AppColors {
   static const Color moodAnxious = Color(0xFFF44336);
   static const Color moodNeutral = Color(0xFF9E9E9E);
 
-  // Utility Colors
+  // Utility
   static const Color shadowColor = Color(0x0D000000);
   static const Color dividerColor = Color(0xFFE0E0E0);
   static const Color errorColor = Color(0xFFF44336);
@@ -45,8 +54,10 @@ class AppColors {
   static const Color warningColor = Color(0xFFFF9800);
   static const Color infoColor = Color(0xFF2196F3);
 
-  // Legacy support (keeping old names for backwards compatibility)
+  // Legacy
   static const Color secondaryColor = secondaryTextColor;
   static const Color blackColor = blackTextColor;
   static const Color greyColor = greyTextColor;
+  static const Color deepIris = darkSurface;
+  static const Color midnight = darkBackground;
 }

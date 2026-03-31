@@ -1,3 +1,3 @@
 class AppFonts {
-  static String mainFontName = "Urbanist";
+  static String mainFontName = "Nunito";
 }

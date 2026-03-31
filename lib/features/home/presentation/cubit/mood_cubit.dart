@@ -34,6 +34,15 @@ class MoodCubit extends Cubit<MoodState> {
     );
   }
 
+  // Delete a single entry from cache and update state
+  Future<void> deleteEntry(int id) async {
+    if (state is! MoodHistorySuccess) return;
+    final current = (state as MoodHistorySuccess).entries;
+    final updated = current.where((e) => e.id != id).toList();
+    emit(MoodHistorySuccess(updated));
+    await _repository.deleteEntry(id);
+  }
+
   // Get history
   Future<void> getHistory() async {
     emit(const MoodLoading());
