@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/styling/theme_extensions.dart';
@@ -10,8 +12,22 @@ import '../widgets/profile_settings_section_widget.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  static const String _name = 'Riyam';
-  static const String _subtitle = 'Joined March 2026 · MindEase member';
+  String get _name {
+    final user = Supabase.instance.client.auth.currentUser;
+    final fullName = user?.userMetadata?['full_name'] as String?;
+    if (fullName != null && fullName.isNotEmpty) return fullName;
+    return user?.email?.split('@').first ?? 'Friend';
+  }
+
+  String get _subtitle {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user?.createdAt != null) {
+      final joined = DateTime.parse(user!.createdAt);
+      final month = DateFormat('MMMM yyyy').format(joined);
+      return 'Joined $month · MindEase member';
+    }
+    return 'MindEase member';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +71,7 @@ class ProfileScreen extends StatelessWidget {
           padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.horizontalPaddingLg,
           ),
-          sliver: const SliverToBoxAdapter(
+          sliver: SliverToBoxAdapter(
             child: ProfileAvatarWidget(
               name: _name,
               subtitle: _subtitle,

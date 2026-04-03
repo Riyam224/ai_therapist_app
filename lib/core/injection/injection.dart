@@ -1,5 +1,13 @@
 import 'package:ai_therapist_app/core/networking/dio_helper.dart';
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../features/auth/data/datasources/supabase_auth_datasource.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/domain/usecases/login_usecase.dart';
+import '../../features/auth/domain/usecases/logout_usecase.dart';
+import '../../features/auth/domain/usecases/register_usecase.dart';
+import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/home/data/datasources/mood_local_datasource.dart';
 import '../../features/home/data/datasources/mood_remote_datasource.dart';
 import '../../features/home/data/repositories/mood_repository_impl.dart';
@@ -12,17 +20,41 @@ void setupInjection() {
   // ── Dio ──
   sl.registerLazySingleton(() => DioHelper());
 
-  // ── DataSources ──
+  // ── Supabase ──
+  sl.registerLazySingleton(() => Supabase.instance.client);
+
+  // ── Auth DataSource ──
+  sl.registerLazySingleton(() => SupabaseAuthDatasource(sl()));
+
+  // ── Auth Repository ──
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(sl()),
+  );
+
+  // ── Auth UseCases ──
+  sl.registerLazySingleton(() => LoginUseCase(sl()));
+  sl.registerLazySingleton(() => RegisterUseCase(sl()));
+  sl.registerLazySingleton(() => LogoutUseCase(sl()));
+
+  // ── Auth Cubit — factory always ──
+  sl.registerFactory(() => AuthCubit(
+        loginUseCase: sl(),
+        registerUseCase: sl(),
+        logoutUseCase: sl(),
+        authRepository: sl(),
+      ));
+
+  // ── Mood DataSources ──
   sl.registerLazySingleton<MoodRemoteDatasource>(
     () => MoodRemoteDatasource(sl<DioHelper>().dio!),
   );
   sl.registerLazySingleton<MoodLocalDatasource>(() => MoodLocalDatasource());
 
-  // ── Repository ──
+  // ── Mood Repository ──
   sl.registerLazySingleton<MoodRepository>(
     () => MoodRepositoryImpl(sl(), sl()),
   );
 
-  // ── Cubit — factory always ──
+  // ── Mood Cubit — factory always ──
   sl.registerFactory(() => MoodCubit(sl()));
 }

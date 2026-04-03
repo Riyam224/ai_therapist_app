@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/injection/injection.dart';
 import '../../../../core/models/mood_entry.dart';
@@ -17,13 +18,18 @@ import '../widgets/recent_entries_list.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static const String _userName = "Riyam";
+  String get _userName {
+    final user = Supabase.instance.client.auth.currentUser;
+    final fullName = user?.userMetadata?['full_name'] as String?;
+    if (fullName != null && fullName.isNotEmpty) return fullName.split(' ').first;
+    return user?.email?.split('@').first ?? 'Friend';
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<MoodCubit>()..getHistory(),
-      child: const _HomeScreenBody(userName: _userName),
+      child: _HomeScreenBody(userName: _userName),
     );
   }
 }
