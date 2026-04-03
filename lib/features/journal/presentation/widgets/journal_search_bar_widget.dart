@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 
 /// Search bar for filtering journal entries
@@ -19,7 +19,7 @@ class JournalSearchBarWidget extends StatelessWidget {
     return Container(
       height: 48.h,
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: context.extra.cardBackgroundColor,
         borderRadius: BorderRadius.circular(14.r),
       ),
       child: TextField(
@@ -31,7 +31,7 @@ class JournalSearchBarWidget extends StatelessWidget {
           hintStyle: ThemeTextStyles.bodySmall(context),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: AppColors.secondaryTextColor,
+            color: context.extra.secondaryTextColor,
             size: 20.sp,
           ),
           border: InputBorder.none,

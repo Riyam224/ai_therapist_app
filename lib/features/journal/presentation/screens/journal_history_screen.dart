@@ -8,6 +8,7 @@ import '../../../../core/widgets/mood_entry_card.dart';
 import '../../../home/domain/entities/mood_entry_entity.dart';
 import '../../../home/presentation/cubit/mood_cubit.dart';
 import '../../../home/presentation/cubit/mood_state.dart';
+import '../../../../core/styling/theme_text_styles.dart';
 import '../widgets/journal_header_widget.dart';
 import '../widgets/journal_search_bar_widget.dart';
 import '../widgets/journal_emoji_filter_widget.dart';
@@ -185,13 +186,13 @@ class _JournalBodyState extends State<_JournalBody> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.cloud_off_outlined,
-                          size: 48, color: Colors.grey),
+                      Icon(Icons.cloud_off_outlined,
+                          size: 48, color: Theme.of(context).colorScheme.outline),
                       const SizedBox(height: 12),
                       Text(
                         state.message,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.grey),
+                        style: ThemeTextStyles.bodyMedium(context),
                       ),
                     ],
                   ),
@@ -200,11 +201,11 @@ class _JournalBodyState extends State<_JournalBody> {
 
             // ── Empty ────────────────────────────────────────
             else if (filtered.isEmpty)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 child: Center(
                   child: Text(
                     'No entries found',
-                    style: TextStyle(color: Colors.grey),
+                    style: ThemeTextStyles.bodyMedium(context),
                   ),
                 ),
               )

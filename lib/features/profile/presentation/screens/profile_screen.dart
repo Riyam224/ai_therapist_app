@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../widgets/profile_avatar_widget.dart';
 import '../widgets/profile_stats_widget.dart';
@@ -37,11 +37,11 @@ class ProfileScreen extends StatelessWidget {
                   height: AppSizes.avatarSm,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.cardBackground,
+                    color: context.extra.cardBackgroundColor,
                   ),
                   child: Icon(
                     Icons.settings_outlined,
-                    color: AppColors.secondaryTextColor,
+                    color: context.extra.secondaryTextColor,
                     size: AppSizes.iconSm,
                   ),
                 ),

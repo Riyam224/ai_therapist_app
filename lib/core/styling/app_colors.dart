@@ -4,7 +4,7 @@ class AppColors {
   // ── Light Theme ──────────────────────────────────────────────────────────
   static const Color lightBackground = Color(0xFFFFF8F5);    // Scaffold
   static const Color lightSurface = Color(0xFFFFF0E8);       // Cards
-  static const Color primary = Color(0xFFFF8C5A);            // CTA buttons
+  static const Color primary = Color(0xFFE8621A);            // CTA buttons
   static const Color primaryContainer = Color(0xFF5BBFA0);   // AI bubble, mint
   static const Color lightOnBackground = Color(0xFF2D2016);  // Headings
   static const Color lightSecondaryText = Color(0xFF7A5038); // Labels, hints

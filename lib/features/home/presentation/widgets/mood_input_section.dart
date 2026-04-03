@@ -28,13 +28,21 @@ class _MoodInputSectionState extends State<MoodInputSection> {
     AppAssets.moodGreat,
   ];
 
+  static const List<String> _moodLabels = [
+    'Feeling awful',
+    'Feeling meh',
+    'Feeling okay',
+    'Feeling good',
+    'Amazing!',
+  ];
+
   // Per-emoji tint colors matching the OpenMoji outlined SVG style
   static const List<Color> _moodColors = [
-    Color(0xFF6B8CBA), // Awful  — blue-slate
-    Color(0xFF9E9E9E), // Meh    — gray
-    Color(0xFF5E9E73), // Okay   — green
-    Color(0xFFCF9B3A), // Good   — amber
-    Color(0xFF7C6FCD), // Great  — soft purple
+    Color(0xFF2563EB), // Awful  — bold blue
+    Color(0xFF525252), // Meh    — dark gray
+    Color(0xFF16A34A), // Okay   — bold green
+    Color(0xFFD97706), // Good   — bold amber
+    Color(0xFF6D28D9), // Great  — bold purple
   ];
 
   /// Maps asset path → unicode emoji character sent to the API
@@ -101,6 +109,9 @@ class _MoodInputSectionState extends State<MoodInputSection> {
           selectedEmoji: _selectedEmojiPath,
           onEmojiSelected: _onEmojiSelected,
           moodColors: _moodColors,
+          selectedLabel: _selectedEmojiPath != null
+              ? _moodLabels[_moodEmojis.indexOf(_selectedEmojiPath!)]
+              : null,
         ),
         SizedBox(height: AppSpacing.sectionSpacingMd),
         Text('SHARE YOUR THOUGHTS', style: ThemeTextStyles.labelLarge(context)),

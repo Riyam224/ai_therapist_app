@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../core/styling/app_colors.dart';
-import '../../../../core/styling/app_assets.dart';
 
-/// Luna avatar with lavender border and flower image
+/// Luna avatar with lavender border and growing plant animation
 class LunaAvatarWidget extends StatelessWidget {
   const LunaAvatarWidget({super.key});
 
@@ -19,18 +19,13 @@ class LunaAvatarWidget extends StatelessWidget {
           width: 3.w,
         ),
       ),
-      child: Container(
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
-        ),
-        child: Center(
-          child: Image.asset(
-            AppAssets.greetingMorning,
-            width: 50.w,
-            height: 50.h,
-            fit: BoxFit.contain,
-          ),
+      child: ClipOval(
+        child: Lottie.asset(
+          'assets/lottie/plant.json',
+          fit: BoxFit.cover,
+          repeat: true,
+          animate: true,
+          errorBuilder: (_, __, ___) => const Icon(Icons.spa_outlined, size: 40),
         ),
       ),
     );
