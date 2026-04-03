@@ -29,6 +29,8 @@ class ThoughtsInputWidget extends StatelessWidget {
           maxLength: 500,
           style: ThemeTextStyles.bodyMedium(context),
           decoration: InputDecoration(
+            filled: true,
+            fillColor: extraColors.cardBackgroundColor,
             hintText: 'What\'s on your mind today...',
             hintStyle: ThemeTextStyles.bodySmall(context),
             border: OutlineInputBorder(

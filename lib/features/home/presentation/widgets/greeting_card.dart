@@ -27,7 +27,6 @@ class GreetingCard extends StatelessWidget {
       children: [
         Container(
           width: double.infinity,
-          height: AppSizes.greetingCardHeight,
           decoration: BoxDecoration(
             color: extraColors.primaryColor,
             borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
@@ -42,23 +41,9 @@ class GreetingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '$greeting, $userName ',
-                            style: ThemeTextStyles.whiteHeadline(context),
-                          ),
-                          TextSpan(
-                            text: '🌱',
-                            style: TextStyle(
-                              inherit: false,
-                              fontSize:
-                                  ThemeTextStyles.whiteHeadline(context).fontSize,
-                            ),
-                          ),
-                        ],
-                      ),
+                    Text(
+                      '$greeting, $userName',
+                      style: ThemeTextStyles.whiteHeadline(context),
                     ),
                     HeightSpace(AppSpacing.spaceMd),
                     Text(

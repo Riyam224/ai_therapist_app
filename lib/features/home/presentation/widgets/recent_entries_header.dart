@@ -8,7 +8,9 @@ import '../../../../core/widgets/spacing_widgets.dart';
 
 /// Header for recent mood entries with "See all" navigation
 class RecentEntriesHeader extends StatelessWidget {
-  const RecentEntriesHeader({super.key});
+  const RecentEntriesHeader({super.key, this.onDeleteAll});
+
+  final VoidCallback? onDeleteAll;
 
   @override
   Widget build(BuildContext context) {
@@ -18,27 +20,39 @@ class RecentEntriesHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text('RECENT ENTRIES', style: ThemeTextStyles.labelLarge(context)),
-        GestureDetector(
-          onTap: () {
-            // TODO: Navigate to journal/history screen
-            GoRouter.of(context).push('/journal');
-          },
-          child: Row(
-            children: [
-              Text(
-                'See all',
-                style: ThemeTextStyles.labelMedium(context).copyWith(
+        Row(
+          children: [
+            if (onDeleteAll != null) ...[
+              GestureDetector(
+                onTap: onDeleteAll,
+                child: Icon(
+                  Icons.delete_outline_rounded,
                   color: extraColors.primaryColor,
+                  size: AppSizes.iconSm,
                 ),
               ),
-              WidthSpace(AppSpacing.spaceXs),
-              Icon(
-                Icons.arrow_forward,
-                color: extraColors.primaryColor,
-                size: AppSizes.iconSm,
-              ),
+              WidthSpace(AppSpacing.spaceSm),
             ],
-          ),
+            GestureDetector(
+              onTap: () => GoRouter.of(context).push('/journal'),
+              child: Row(
+                children: [
+                  Text(
+                    'See all',
+                    style: ThemeTextStyles.labelMedium(context).copyWith(
+                      color: extraColors.primaryColor,
+                    ),
+                  ),
+                  WidthSpace(AppSpacing.spaceXs),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: extraColors.primaryColor,
+                    size: AppSizes.iconSm,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );

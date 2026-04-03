@@ -73,6 +73,18 @@ class MoodRepositoryImpl implements MoodRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, void>> deleteAllEntries() async {
+    try {
+      await _local.deleteAllEntries();
+      _logger.i('All entries deleted from cache');
+      return const Right(null);
+    } catch (e) {
+      _logger.e('Failed to delete all entries: $e');
+      return Left(NetworkFailure('Failed to delete all entries'));
+    }
+  }
+
   Either<Failure, List<MoodEntryEntity>> _fallbackToCache(Failure failure) {
     final cached = _local.getCachedHistory();
     if (cached.isNotEmpty) {

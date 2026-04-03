@@ -35,4 +35,9 @@ class MoodLocalDatasource {
     final updated = existing.where((e) => e.id != id).toList();
     await cacheHistory(updated);
   }
+
+  /// Clears all cached entries.
+  Future<void> deleteAllEntries() async {
+    await _box.delete(_entriesKey);
+  }
 }

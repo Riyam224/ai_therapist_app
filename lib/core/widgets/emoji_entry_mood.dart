@@ -1,6 +1,5 @@
 import 'package:ai_therapist_app/core/constants/app_sizes.dart';
 import 'package:ai_therapist_app/core/styling/app_colors.dart';
-import 'package:ai_therapist_app/core/styling/theme_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -26,7 +25,6 @@ class EmojiEntryMood extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = moodColor ?? AppColors.primary;
-    final extraColors = context.extra;
 
     return GestureDetector(
       onTap: onTap,
@@ -38,7 +36,7 @@ class EmojiEntryMood extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.15)
-              : extraColors.cardBackgroundColor,
+              : color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(AppSizes.borderRadiusCircle),
           border: isSelected
               ? Border.all(color: color, width: 2.w)

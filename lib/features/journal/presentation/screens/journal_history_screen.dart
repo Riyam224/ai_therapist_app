@@ -76,6 +76,29 @@ class _JournalBodyState extends State<_JournalBody> {
     return map[emoji] ?? AppColors.moodNeutral;
   }
 
+  void _confirmDeleteAll(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete all entries?'),
+        content: const Text('This will permanently remove all journal entries from your device.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              context.read<MoodCubit>().deleteAllEntries();
+            },
+            child: const Text('Delete all', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<MoodEntry> _filterAndMap(List<MoodEntryEntity> entities) {
     return entities
         .where((e) {
@@ -110,7 +133,12 @@ class _JournalBodyState extends State<_JournalBody> {
                 AppSpacing.verticalPaddingMd,
               ),
               sliver: SliverToBoxAdapter(
-                child: JournalHeaderWidget(entryCount: allEntities.length),
+                child: JournalHeaderWidget(
+                  entryCount: allEntities.length,
+                  onDeleteAll: allEntities.isEmpty
+                      ? null
+                      : () => _confirmDeleteAll(context),
+                ),
               ),
             ),
 

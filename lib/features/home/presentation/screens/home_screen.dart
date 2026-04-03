@@ -79,6 +79,29 @@ class _HomeScreenBody extends StatelessWidget {
     return colors[emoji] ?? AppColors.moodNeutral;
   }
 
+  void _confirmDeleteAll(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete all entries?'),
+        content: const Text('This will permanently remove all journal entries from your device.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              context.read<MoodCubit>().deleteAllEntries();
+            },
+            child: const Text('Delete all', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MoodCubit, MoodState>(
@@ -132,7 +155,13 @@ class _HomeScreenBody extends StatelessWidget {
                 AppSpacing.horizontalPaddingLg,
                 AppSpacing.sectionSpacingSm,
               ),
-              sliver: const SliverToBoxAdapter(child: RecentEntriesHeader()),
+              sliver: SliverToBoxAdapter(
+                child: RecentEntriesHeader(
+                  onDeleteAll: entries.isEmpty
+                      ? null
+                      : () => _confirmDeleteAll(context),
+                ),
+              ),
             ),
 
             // Loading indicator
