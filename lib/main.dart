@@ -4,7 +4,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'core/constants/supabase_constants.dart';
 import 'core/cubits/theme_cubit.dart';
 import 'core/injection/injection.dart';
 import 'core/routing/router_generation_config.dart';
@@ -22,11 +21,19 @@ void main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
   setupInjection();
-  runApp(const MindEase());
+
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    final session = data.session;
+    if (session != null) {
+      RouterGenerationConfig.goRouter.go('/home');
+    }
+  });
+
+  runApp(const LunaSpace());
 }
 
-class MindEase extends StatelessWidget {
-  const MindEase({super.key});
+class LunaSpace extends StatelessWidget {
+  const LunaSpace({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -20,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 4));
     if (!mounted) return;
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 24),
               const Text(
-                'MindEase',
+                'LunaSpace',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w600,

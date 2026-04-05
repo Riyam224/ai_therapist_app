@@ -4,10 +4,12 @@ import 'package:ai_therapist_app/core/navigation/main_shell_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
+import '../../features/auth/presentation/cubit/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/home/presentation/cubit/mood_cubit.dart';
+import '../../features/home/presentation/cubit/mood_state.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/journal/presentation/screens/journal_history_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -45,7 +47,22 @@ class RouterGenerationConfig {
       // Main app shell with bottom navigation
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return MainShellScreen(navigationShell: navigationShell);
+          final moodCubit = sl<MoodCubit>();
+          if (moodCubit.state is MoodInitial) moodCubit.getHistory();
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider.value(value: moodCubit),
+              BlocProvider(create: (_) => sl<AuthCubit>()),
+            ],
+            child: BlocListener<AuthCubit, AuthState>(
+              listener: (ctx, authState) {
+                if (authState is AuthUnauthenticated) {
+                  ctx.go(AppRoutes.loginScreen);
+                }
+              },
+              child: MainShellScreen(navigationShell: navigationShell),
+            ),
+          );
         },
         branches: [
           StatefulShellBranch(
@@ -88,8 +105,8 @@ class RouterGenerationConfig {
           final emojiUnicode = extra?['emojiUnicode'] as String?;
           final thoughts = extra?['thoughts'] as String? ?? '';
 
-          return BlocProvider(
-            create: (_) => sl<MoodCubit>(),
+          return BlocProvider.value(
+            value: sl<MoodCubit>(),
             child: ResponseAiScreen(
               emojiImagePath: emojiPath,
               emojiUnicode: emojiUnicode,

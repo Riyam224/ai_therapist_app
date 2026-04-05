@@ -153,12 +153,11 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
                   }
 
                   // Success or initial (show content)
-                  final aiResponse = state is MoodGenerateSuccess
-                      ? state.entry.aiResponse
-                      : '';
-                  final displayThoughts = state is MoodGenerateSuccess
-                      ? state.entry.thoughts
-                      : widget.thoughts;
+                  final generated = state is MoodHistorySuccess
+                      ? state.justGenerated
+                      : null;
+                  final aiResponse = generated?.aiResponse ?? '';
+                  final displayThoughts = generated?.thoughts ?? widget.thoughts;
 
                   return SingleChildScrollView(
                     padding: EdgeInsets.symmetric(

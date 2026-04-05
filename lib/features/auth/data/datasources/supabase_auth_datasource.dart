@@ -32,6 +32,10 @@ class SupabaseAuthDatasource {
   }
 
   Future<void> signInWithGoogle() async {
-    await _client.auth.signInWithOAuth(OAuthProvider.google);
+    await _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'io.supabase.aitherapist://login-callback',
+      authScreenLaunchMode: LaunchMode.externalApplication,
+    );
   }
 }

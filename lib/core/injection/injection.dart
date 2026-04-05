@@ -1,4 +1,6 @@
 import 'package:ai_therapist_app/core/networking/dio_helper.dart';
+import 'package:ai_therapist_app/features/plant/data/repositories/streak_repository.dart';
+import 'package:ai_therapist_app/features/plant/presentation/cubit/plant_cubit.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/data/datasources/supabase_auth_datasource.dart';
@@ -55,6 +57,14 @@ void setupInjection() {
     () => MoodRepositoryImpl(sl(), sl()),
   );
 
-  // ── Mood Cubit — factory always ──
-  sl.registerFactory(() => MoodCubit(sl()));
+  // ── Mood Cubit — singleton so all screens share state ──
+  sl.registerLazySingleton(() => MoodCubit(sl()));
+
+  sl.registerLazySingleton<StreakRepository>(
+    () => StreakRepository(sl<DioHelper>().dio!),
+  );
+
+  sl.registerFactory<PlantCubit>(
+    () => PlantCubit(sl<StreakRepository>()), // no SupabaseClient
+  );
 }

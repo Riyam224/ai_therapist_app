@@ -16,20 +16,14 @@ class MoodLoading extends MoodState {
   const MoodLoading();
 }
 
-class MoodGenerateSuccess extends MoodState {
-  final MoodEntryEntity entry;
-  const MoodGenerateSuccess(this.entry);
-
-  @override
-  List<Object?> get props => [entry];
-}
-
 class MoodHistorySuccess extends MoodState {
   final List<MoodEntryEntity> entries;
-  const MoodHistorySuccess(this.entries);
+  final MoodEntryEntity? justGenerated;
+
+  const MoodHistorySuccess(this.entries, {this.justGenerated});
 
   @override
-  List<Object?> get props => [entries];
+  List<Object?> get props => [entries, justGenerated];
 }
 
 class MoodError extends MoodState {

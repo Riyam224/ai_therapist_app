@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/injection/injection.dart';
 import '../../../../core/models/mood_entry.dart';
 import '../../../../core/styling/app_colors.dart';
+import '../../../plant/presentation/cubit/plant_cubit.dart';
 import '../../domain/entities/mood_entry_entity.dart';
 import '../cubit/mood_cubit.dart';
 import '../cubit/mood_state.dart';
@@ -21,14 +22,23 @@ class HomeScreen extends StatelessWidget {
   String get _userName {
     final user = Supabase.instance.client.auth.currentUser;
     final fullName = user?.userMetadata?['full_name'] as String?;
-    if (fullName != null && fullName.isNotEmpty) return fullName.split(' ').first;
+    if (fullName != null && fullName.isNotEmpty)
+      return fullName.split(' ').first;
     return user?.email?.split('@').first ?? 'Friend';
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<MoodCubit>()..getHistory(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => sl<PlantCubit>()..loadPlant(),
+        ),
+        BlocProvider(
+          // 👈 add this
+          create: (_) => sl<MoodCubit>()..loadEntries(),
+        ),
+      ],
       child: _HomeScreenBody(userName: _userName),
     );
   }
@@ -90,7 +100,8 @@ class _HomeScreenBody extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete all entries?'),
-        content: const Text('This will permanently remove all journal entries from your device.'),
+        content: const Text(
+            'This will permanently remove all journal entries from your device.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
@@ -101,7 +112,8 @@ class _HomeScreenBody extends StatelessWidget {
               Navigator.of(dialogContext).pop();
               context.read<MoodCubit>().deleteAllEntries();
             },
-            child: const Text('Delete all', style: TextStyle(color: Colors.red)),
+            child:
+                const Text('Delete all', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -163,9 +175,8 @@ class _HomeScreenBody extends StatelessWidget {
               ),
               sliver: SliverToBoxAdapter(
                 child: RecentEntriesHeader(
-                  onDeleteAll: entries.isEmpty
-                      ? null
-                      : () => _confirmDeleteAll(context),
+                  onDeleteAll:
+                      entries.isEmpty ? null : () => _confirmDeleteAll(context),
                 ),
               ),
             ),
@@ -205,8 +216,7 @@ class _HomeScreenBody extends StatelessWidget {
                 ),
                 sliver: RecentEntriesList(
                   entries: entries,
-                  onDelete: (id) =>
-                      context.read<MoodCubit>().deleteEntry(id),
+                  onDelete: (id) => context.read<MoodCubit>().deleteEntry(id),
                 ),
               ),
           ],

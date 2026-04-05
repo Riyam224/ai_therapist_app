@@ -18,10 +18,7 @@ class JournalHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<MoodCubit>()..getHistory(),
-      child: const _JournalBody(),
-    );
+    return const _JournalBody();
   }
 }
 

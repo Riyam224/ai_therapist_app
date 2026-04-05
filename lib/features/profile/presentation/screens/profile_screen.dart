@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../widgets/profile_avatar_widget.dart';
 import '../widgets/profile_stats_widget.dart';
 import '../widgets/profile_settings_section_widget.dart';
@@ -106,6 +109,36 @@ class ProfileScreen extends StatelessWidget {
           ),
           sliver: const SliverToBoxAdapter(
             child: ProfileSettingsSectionWidget(),
+          ),
+        ),
+
+        // ── Logout button ─────────────────────────────────
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.horizontalPaddingLg,
+            0,
+            AppSpacing.horizontalPaddingLg,
+            100,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: TextButton.icon(
+              onPressed: () => context.read<AuthCubit>().logout(),
+              icon: const Icon(Icons.logout_rounded, color: AppColors.errorColor),
+              label: Text(
+                'Log out',
+                style: ThemeTextStyles.bodyMedium(context).copyWith(
+                  color: AppColors.errorColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: AppColors.errorColor.withValues(alpha: 0.3)),
+                ),
+              ),
+            ),
           ),
         ),
       ],

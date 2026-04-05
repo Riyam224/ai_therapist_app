@@ -1,5 +1,8 @@
+//
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
+import '../../domain/entities/mood_entry_entity.dart';
 import '../../domain/repositories/mood_repository.dart';
 import 'mood_state.dart';
 
@@ -7,9 +10,16 @@ class MoodCubit extends Cubit<MoodState> {
   final MoodRepository _repository;
   final Logger _logger = Logger();
 
+  List<MoodEntryEntity> _cachedEntries = [];
+
   MoodCubit(this._repository) : super(const MoodInitial());
 
-  // Generate AI response
+  // 🔥 ADD THIS METHOD
+  Future<void> loadEntries() async {
+    await getHistory();
+  }
+
+  // Generate AI response and prepend to cached history
   Future<void> generateResponse({
     required String emoji,
     required String thoughts,
@@ -29,22 +39,22 @@ class MoodCubit extends Cubit<MoodState> {
       },
       (entry) {
         _logger.i('MoodCubit: success — entry id: ${entry.id}');
-        emit(MoodGenerateSuccess(entry));
+        _cachedEntries = [entry, ..._cachedEntries];
+        emit(MoodHistorySuccess(_cachedEntries, justGenerated: entry));
       },
     );
   }
 
   // Delete a single entry from cache and update state
   Future<void> deleteEntry(int id) async {
-    if (state is! MoodHistorySuccess) return;
-    final current = (state as MoodHistorySuccess).entries;
-    final updated = current.where((e) => e.id != id).toList();
-    emit(MoodHistorySuccess(updated));
+    _cachedEntries = _cachedEntries.where((e) => e.id != id).toList();
+    emit(MoodHistorySuccess(_cachedEntries));
     await _repository.deleteEntry(id);
   }
 
   // Delete all entries from cache and update state
   Future<void> deleteAllEntries() async {
+    _cachedEntries = [];
     emit(const MoodHistorySuccess([]));
     await _repository.deleteAllEntries();
   }
@@ -63,6 +73,7 @@ class MoodCubit extends Cubit<MoodState> {
       },
       (entries) {
         _logger.i('MoodCubit: ${entries.length} entries loaded');
+        _cachedEntries = entries;
         emit(MoodHistorySuccess(entries));
       },
     );

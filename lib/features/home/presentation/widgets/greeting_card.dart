@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/styling/theme_extensions.dart';
-import '../../../../core/styling/theme_text_styles.dart';
-import '../../../../core/utils/date_time_helper.dart';
-import '../../../../core/widgets/spacing_widgets.dart';
+import '../../../../core/styling/app_colors.dart';
+import '../../../plant/domain/entities/plant_stage.dart';
+import '../../../plant/presentation/cubit/plant_cubit.dart';
+import '../../../plant/presentation/cubit/plant_state.dart';
 
-/// Greeting card displaying personalized welcome message with Luna animation.
+/// Greeting card displaying personalized welcome message with dynamic plant animation.
 class GreetingCard extends StatelessWidget {
   const GreetingCard({
     required this.userName,
@@ -18,66 +18,84 @@ class GreetingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const greeting = 'Hello';
-    final formattedDate = DateTimeHelper.getFormattedDate();
-    final extraColors = context.extra;
+    return BlocBuilder<PlantCubit, PlantState>(
+      builder: (context, state) {
+        final stage = state is PlantLoaded ? state.stage : PlantStage.seed;
+        final streak = state is PlantLoaded ? state.streakDays : 0;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
+        return Container(
           width: double.infinity,
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: extraColors.primaryColor,
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
           ),
-          padding: EdgeInsets.all(AppSpacing.horizontalPaddingLg),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ── Text column ────────────────────────────────────────────
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '$greeting, $userName',
-                      style: ThemeTextStyles.whiteHeadline(context),
+                      'Hello, $userName',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    HeightSpace(AppSpacing.spaceMd),
+                    const SizedBox(height: 4),
                     Text(
-                      'What\'s growing in your mind today?',
-                      style: ThemeTextStyles.whiteBody(context),
+                      stage.label,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: .85),
+                        fontSize: 13,
+                      ),
                     ),
-                    HeightSpace(AppSpacing.spaceLg),
-                    Text(
-                      formattedDate,
-                      style: ThemeTextStyles.whiteCaption(context),
-                    ),
+                    const SizedBox(height: 10),
+                    if (streak > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: .2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '🔥 $streak day streak',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    if (streak == 0)
+                      Text(
+                        stage.streakMessage,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: .7),
+                          fontSize: 12,
+                        ),
+                      ),
                   ],
                 ),
               ),
-              const SizedBox(width: 120),
+              Lottie.asset(
+                stage.lottiePath,
+                width: 110,
+                height: 110,
+                fit: BoxFit.contain,
+                repeat: true,
+                errorBuilder: (_, __, ___) =>
+                    const SizedBox(width: 110, height: 110),
+              ),
             ],
           ),
-        ),
-
-        // ── Luna Lottie animation — floats above the card ─────────────────
-        Positioned(
-          right: 8,
-          top: -28,
-          child: Lottie.asset(
-            'assets/lottie/plant.json',
-            width: 148,
-            height: 148,
-            fit: BoxFit.contain,
-            repeat: true,
-            animate: true,
-            errorBuilder: (_, __, ___) => const SizedBox(width: 80, height: 80),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
