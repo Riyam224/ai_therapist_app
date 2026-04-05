@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/app_fonts.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 
 /// Purple avatar circle with initial, name and joined subtitle
@@ -18,15 +18,17 @@ class ProfileAvatarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final extra = context.extra;
+
     return Column(
       children: [
         // Avatar circle
         Container(
           width: 88.w,
           height: 88.h,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.primary,
+            color: extra.primaryColor!,
           ),
           child: Center(
             child: Text(
@@ -35,7 +37,7 @@ class ProfileAvatarWidget extends StatelessWidget {
                 fontFamily: AppFonts.mainFontName,
                 fontSize: 36.sp,
                 fontWeight: FontWeight.bold,
-                color: AppColors.whiteTextColor,
+                color: extra.onPrimaryTextColor!,
               ),
             ),
           ),

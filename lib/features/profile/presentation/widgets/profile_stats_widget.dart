@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/app_fonts.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../../../../core/styling/theme_extensions.dart';
@@ -61,7 +60,7 @@ class _StatCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: context.extra.shadowColor!.withValues(alpha: 0.35),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -78,7 +77,7 @@ class _StatCard extends StatelessWidget {
                       fontFamily: AppFonts.mainFontName,
                       fontSize: 22.sp,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: context.extra.primaryColor!,
                     ),
                   ),
                 ],

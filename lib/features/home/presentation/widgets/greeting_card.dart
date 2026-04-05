@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../../../plant/domain/entities/plant_stage.dart';
 import '../../../plant/presentation/cubit/plant_cubit.dart';
 import '../../../plant/presentation/cubit/plant_state.dart';
@@ -20,14 +20,19 @@ class GreetingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<PlantCubit, PlantState>(
       builder: (context, state) {
+        final extra = context.extra;
+        final onPrimary = extra.onPrimaryTextColor!;
+        final primary = extra.primaryColor!;
         final stage = state is PlantLoaded ? state.stage : PlantStage.seed;
         final streak = state is PlantLoaded ? state.streakDays : 0;
+
+        final dayLabel = streak == 1 ? 'day' : 'days';
 
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.primary,
+            color: primary,
             borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
           ),
           child: Row(
@@ -38,8 +43,8 @@ class GreetingCard extends StatelessWidget {
                   children: [
                     Text(
                       'Hello, $userName',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: onPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -48,7 +53,7 @@ class GreetingCard extends StatelessWidget {
                     Text(
                       stage.label,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: .85),
+                        color: onPrimary.withValues(alpha: .85),
                         fontSize: 13,
                       ),
                     ),
@@ -60,23 +65,40 @@ class GreetingCard extends StatelessWidget {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: .2),
+                          color: onPrimary.withValues(alpha: .2),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(
-                          '🔥 $streak day streak',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.water_drop_rounded,
+                              color: onPrimary,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.local_fire_department,
+                              color: onPrimary,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '$streak $dayLabel streak',
+                              style: TextStyle(
+                                color: onPrimary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     if (streak == 0)
                       Text(
                         stage.streakMessage,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: .7),
+                          color: onPrimary.withValues(alpha: .7),
                           fontSize: 12,
                         ),
                       ),

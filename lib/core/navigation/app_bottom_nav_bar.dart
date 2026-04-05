@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../styling/app_colors.dart';
+import '../styling/theme_extensions.dart';
 
 /// Glass-skin bottom navigation bar
 class AppBottomNavBar extends StatelessWidget {
@@ -23,6 +23,11 @@ class AppBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final extra = context.extra;
+    final primary = extra.primaryColor!;
+    final secondaryText = extra.secondaryTextColor!;
+    final cardBackground = extra.cardBackgroundColor!;
+    final borderColor = extra.borderColor!;
 
     return ClipRect(
       child: BackdropFilter(
@@ -30,13 +35,11 @@ class AppBottomNavBar extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.black.withValues(alpha: 0.40)
-                : Colors.white.withValues(alpha: 0.60),
+                ? primary.withValues(alpha: 0.18)
+                : cardBackground.withValues(alpha: 0.60),
             border: Border(
               top: BorderSide(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.10)
-                    : Colors.white.withValues(alpha: 0.80),
+                color: borderColor.withValues(alpha: isDark ? 0.35 : 0.80),
                 width: 0.8,
               ),
             ),
@@ -54,6 +57,8 @@ class AppBottomNavBar extends StatelessWidget {
                     activeIcon: _items[i].activeIcon,
                     label: _items[i].label,
                     isActive: currentIndex == i,
+                    activeColor: primary,
+                    inactiveColor: secondaryText,
                     onTap: () => onTap(i),
                   ),
                 ),
@@ -71,6 +76,8 @@ class _NavItem extends StatelessWidget {
   final IconData activeIcon;
   final String label;
   final bool isActive;
+  final Color activeColor;
+  final Color inactiveColor;
   final VoidCallback onTap;
 
   const _NavItem({
@@ -78,6 +85,8 @@ class _NavItem extends StatelessWidget {
     required this.activeIcon,
     required this.label,
     required this.isActive,
+    required this.activeColor,
+    required this.inactiveColor,
     required this.onTap,
   });
 
@@ -92,8 +101,8 @@ class _NavItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 22.w, vertical: 7.h),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.primary.withValues(alpha: 0.13)
-              : Colors.transparent,
+              ? activeColor.withValues(alpha: 0.13)
+              : activeColor.withValues(alpha: 0.0),
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
@@ -101,7 +110,7 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               isActive ? activeIcon : icon,
-              color: isActive ? AppColors.primary : AppColors.secondaryTextColor,
+              color: isActive ? activeColor : inactiveColor,
               size: 22.sp,
             ),
             SizedBox(height: 3.h),
@@ -110,7 +119,7 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11.sp,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive ? AppColors.primary : AppColors.secondaryTextColor,
+                color: isActive ? activeColor : inactiveColor,
               ),
             ),
             SizedBox(height: 3.h),
@@ -120,7 +129,7 @@ class _NavItem extends StatelessWidget {
               width: isActive ? 5.w : 0,
               height: isActive ? 5.h : 0,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: activeColor,
                 shape: BoxShape.circle,
               ),
             ),
