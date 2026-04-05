@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../../../core/networking/api_endpoints.dart';
 import '../models/mood_entry_model.dart';
+import '../models/weekly_letter_model.dart';
 
 class MoodRemoteDatasource {
   final Dio _dio;
@@ -18,5 +19,10 @@ class MoodRemoteDatasource {
     return list
         .map((e) => MoodEntryModel.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<WeeklyLetterModel> getWeeklyLetter() async {
+    final response = await _dio.get(ApiEndpoints.weeklyLetter);
+    return WeeklyLetterModel.fromJson(response.data as Map<String, dynamic>);
   }
 }

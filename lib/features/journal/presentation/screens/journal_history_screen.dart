@@ -9,9 +9,10 @@ import '../../../home/domain/entities/mood_entry_entity.dart';
 import '../../../home/presentation/cubit/mood_cubit.dart';
 import '../../../home/presentation/cubit/mood_state.dart';
 import '../../../../core/styling/theme_text_styles.dart';
-import '../widgets/journal_header_widget.dart';
-import '../widgets/journal_search_bar_widget.dart';
 import '../widgets/journal_emoji_filter_widget.dart';
+import '../widgets/journal_header_widget.dart';
+import '../widgets/journal_mood_graph_widget.dart';
+import '../widgets/journal_search_bar_widget.dart';
 
 class JournalHistoryScreen extends StatelessWidget {
   const JournalHistoryScreen({super.key});
@@ -169,6 +170,20 @@ class _JournalBodyState extends State<_JournalBody> {
                 ),
               ),
             ),
+
+            // ── Mood graph ───────────────────────────────────
+            if (allEntities.isNotEmpty)
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.horizontalPaddingLg,
+                  0,
+                  AppSpacing.horizontalPaddingLg,
+                  AppSpacing.sectionSpacingSm,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: JournalMoodGraphWidget(entries: allEntities),
+                ),
+              ),
 
             // ── Loading ──────────────────────────────────────
             if (state is MoodLoading)

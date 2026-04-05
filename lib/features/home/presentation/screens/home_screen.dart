@@ -9,11 +9,13 @@ import '../../../plant/presentation/cubit/plant_cubit.dart';
 import '../../domain/entities/mood_entry_entity.dart';
 import '../cubit/mood_cubit.dart';
 import '../cubit/mood_state.dart';
+import '../cubit/weekly_letter_cubit.dart';
 import '../widgets/greeting_card.dart';
 import '../widgets/home_header.dart';
 import '../widgets/mood_input_section.dart';
 import '../widgets/recent_entries_header.dart';
 import '../widgets/recent_entries_list.dart';
+import '../widgets/weekly_letter_banner.dart';
 
 /// Home screen — main entry point of the app
 class HomeScreen extends StatelessWidget {
@@ -35,8 +37,10 @@ class HomeScreen extends StatelessWidget {
           create: (_) => sl<PlantCubit>()..loadPlant(),
         ),
         BlocProvider(
-          // 👈 add this
           create: (_) => sl<MoodCubit>()..loadEntries(),
+        ),
+        BlocProvider(
+          create: (_) => sl<WeeklyLetterCubit>()..load(),
         ),
       ],
       child: _HomeScreenBody(userName: _userName),
@@ -152,6 +156,17 @@ class _HomeScreenBody extends StatelessWidget {
               sliver: SliverToBoxAdapter(
                 child: GreetingCard(userName: userName),
               ),
+            ),
+
+            // Weekly letter banner
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.horizontalPaddingLg,
+                AppSpacing.sectionSpacingSm,
+                AppSpacing.horizontalPaddingLg,
+                0,
+              ),
+              sliver: const SliverToBoxAdapter(child: WeeklyLetterBanner()),
             ),
 
             // Mood Input Section

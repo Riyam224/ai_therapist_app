@@ -15,6 +15,7 @@ import '../../features/home/data/datasources/mood_remote_datasource.dart';
 import '../../features/home/data/repositories/mood_repository_impl.dart';
 import '../../features/home/domain/repositories/mood_repository.dart';
 import '../../features/home/presentation/cubit/mood_cubit.dart';
+import '../../features/home/presentation/cubit/weekly_letter_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -59,6 +60,11 @@ void setupInjection() {
 
   // ── Mood Cubit — singleton so all screens share state ──
   sl.registerLazySingleton(() => MoodCubit(sl()));
+
+  // ── Weekly Letter Cubit — factory ──
+  sl.registerFactory<WeeklyLetterCubit>(
+    () => WeeklyLetterCubit(sl<MoodRemoteDatasource>()),
+  );
 
   sl.registerLazySingleton<StreakRepository>(
     () => StreakRepository(sl<DioHelper>().dio!),

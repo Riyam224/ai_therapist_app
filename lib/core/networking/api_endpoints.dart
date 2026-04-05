@@ -4,4 +4,6 @@ class ApiEndpoints {
   static const String generate = '/api/therapist/generate/';
 
   static const String history = '/api/therapist/history/';
+
+  static const String weeklyLetter = '/api/therapist/weekly-letter/';
 }
