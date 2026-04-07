@@ -23,9 +23,22 @@ void main() async {
   setupInjection();
 
   Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    // Only navigate for initial session check and explicit sign-in/sign-out.
+    // Ignoring tokenRefreshed / userUpdated / passwordRecovery prevents the
+    // router from calling go('/home') and silently popping active screens
+    // (e.g. the AI response screen) whenever Supabase refreshes the JWT.
+    const navigableEvents = {
+      AuthChangeEvent.initialSession,
+      AuthChangeEvent.signedIn,
+      AuthChangeEvent.signedOut,
+    };
+    if (!navigableEvents.contains(data.event)) return;
+
     final session = data.session;
     if (session != null) {
       RouterGenerationConfig.goRouter.go('/home');
+    } else {
+      RouterGenerationConfig.goRouter.go('/loginScreen');
     }
   });
 

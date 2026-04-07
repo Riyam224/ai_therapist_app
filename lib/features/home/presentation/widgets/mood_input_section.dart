@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../../../../core/styling/app_assets.dart';
 import '../../../../core/routing/app_routes.dart';
+import '../cubit/mood_cubit.dart';
 import 'mood_selector_widget.dart';
 import 'thoughts_input_widget.dart';
 
@@ -54,6 +56,16 @@ class _MoodInputSectionState extends State<MoodInputSection> {
     AppAssets.moodGreat: '🤩',
   };
 
+  static const List<String> _lowMoods = [
+    '😔',
+    '😢',
+    '😩',
+    '😰',
+    '😭',
+    '😑',
+    '🙁',
+  ];
+
   @override
   void dispose() {
     _thoughtsController.dispose();
@@ -87,14 +99,24 @@ class _MoodInputSectionState extends State<MoodInputSection> {
       return;
     }
 
-    context.push(
-      AppRoutes.response,
-      extra: {
-        'emojiPath': _selectedEmojiPath,
-        'emojiUnicode': _emojiUnicodeMap[_selectedEmojiPath] ?? '😊',
-        'thoughts': thoughts,
-      },
-    );
+    final emojiUnicode = _emojiUnicodeMap[_selectedEmojiPath] ?? '😊';
+
+    if (_lowMoods.contains(emojiUnicode)) {
+      context.read<MoodCubit>().addLocalEntry(
+        emoji: emojiUnicode,
+        thoughts: thoughts,
+      );
+      context.go(AppRoutes.breathing, extra: emojiUnicode);
+    } else {
+      context.push(
+        AppRoutes.response,
+        extra: {
+          'emojiPath': _selectedEmojiPath,
+          'emojiUnicode': emojiUnicode,
+          'thoughts': thoughts,
+        },
+      );
+    }
   }
 
   @override

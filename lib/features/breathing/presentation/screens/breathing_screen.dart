@@ -3,7 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../widgets/breathing_circle.dart';
 
@@ -18,34 +21,36 @@ class BreathingScreen extends StatefulWidget {
 
 class _BreathingScreenState extends State<BreathingScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+  AnimationController? _controller;
+  Animation<double>? _scaleAnimation;
 
-  int _currentRound = 1;
+  final ValueNotifier<int> _currentRound = ValueNotifier<int>(1);
   final int _totalRounds = 3;
-  String _phase = 'Breathe in';
-  String _subText = 'Take a deep breath for 4 seconds';
-  Color _circleColor = AppColors.primary;
-  bool _isRunning = false;
-  bool _isFinished = false;
+  final ValueNotifier<String> _phase = ValueNotifier<String>('Breathe in');
+  final ValueNotifier<String> _subText =
+      ValueNotifier<String>('Take a deep breath for 4 seconds');
+  final ValueNotifier<Color> _circleColor =
+      ValueNotifier<Color>(AppColors.breathInColor);
+  final ValueNotifier<bool> _isRunning = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _isFinished = ValueNotifier<bool>(false);
 
-  static final _phases = [
+  static final List<Map<String, Object>> _phases = [
     {
       'name': 'Breathe in',
       'seconds': 4,
-      'color': AppColors.primary,
+      'color': AppColors.breathInColor,
       'sub': 'Take a deep breath slowly',
     },
     {
       'name': 'Hold',
       'seconds': 7,
-      'color': const Color(0xFF2D6A4F),
+      'color': AppColors.breathHoldColor,
       'sub': 'Hold your breath gently',
     },
     {
       'name': 'Breathe out',
       'seconds': 8,
-      'color': const Color(0xFF85B7EB),
+      'color': AppColors.breathOutColor,
       'sub': 'Release slowly and completely',
     },
   ];
@@ -58,34 +63,32 @@ class _BreathingScreenState extends State<BreathingScreen>
       duration: const Duration(seconds: 4),
     );
     _scaleAnimation = Tween<double>(begin: 0.7, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _controller!, curve: Curves.easeInOut),
     );
   }
 
   Future<void> _startExercise() async {
-    setState(() => _isRunning = true);
+    _isRunning.value = true;
 
     for (int round = 1; round <= _totalRounds; round++) {
       if (!mounted) return;
-      setState(() => _currentRound = round);
+      _currentRound.value = round;
 
       for (final phase in _phases) {
         if (!mounted) return;
 
         HapticFeedback.lightImpact();
 
-        setState(() {
-          _phase = phase['name'] as String;
-          _subText = phase['sub'] as String;
-          _circleColor = phase['color'] as Color;
-        });
+        _phase.value = phase['name'] as String;
+        _subText.value = phase['sub'] as String;
+        _circleColor.value = phase['color'] as Color;
 
-        _controller.duration = Duration(seconds: phase['seconds'] as int);
+        _controller?.duration = Duration(seconds: phase['seconds'] as int);
 
         if (phase['name'] == 'Breathe in') {
-          _controller.forward(from: 0);
+          _controller?.forward(from: 0);
         } else if (phase['name'] == 'Breathe out') {
-          _controller.reverse(from: 1);
+          _controller?.reverse(from: 1);
         }
 
         await Future.delayed(Duration(seconds: phase['seconds'] as int));
@@ -94,135 +97,184 @@ class _BreathingScreenState extends State<BreathingScreen>
 
     if (!mounted) return;
     HapticFeedback.mediumImpact();
-    setState(() => _isFinished = true);
+    _isFinished.value = true;
 
     await Future.delayed(const Duration(seconds: 1));
 
     if (mounted) {
-      context.go('/affirmation', extra: widget.emoji);
+      context.go(AppRoutes.affirmation, extra: widget.emoji);
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
+    _currentRound.dispose();
+    _phase.dispose();
+    _subText.dispose();
+    _circleColor.dispose();
+    _isRunning.dispose();
+    _isFinished.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.horizontalPaddingXl,
+          ),
           child: Column(
             children: [
-              const SizedBox(height: 40),
-
+              SizedBox(height: AppSpacing.space3Xl + AppSpacing.spaceSm),
               Text(
                 'Breathe with Luna 🌿',
-                style: ThemeTextStyles.headlineSmall(context),
+                style: ThemeTextStyles.headlineSmall(context).copyWith(
+                  color: context.extra.primaryTextColor,
+                ),
                 textAlign: TextAlign.center,
               ),
-
-              const SizedBox(height: 8),
-
+              SizedBox(height: AppSpacing.spaceSm),
               Text(
                 '4-7-8 breathing for instant calm',
-                style: ThemeTextStyles.bodyMedium(context),
+                style: ThemeTextStyles.bodyMedium(context).copyWith(
+                  color: context.extra.secondaryTextColor,
+                ),
                 textAlign: TextAlign.center,
               ),
-
-              const SizedBox(height: 60),
-
+              SizedBox(
+                height: AppSpacing.space3Xl +
+                    AppSpacing.space2Xl +
+                    AppSpacing.spaceXs,
+              ),
               AnimatedBuilder(
-                animation: _scaleAnimation,
+                animation: Listenable.merge([
+                  _scaleAnimation!,
+                  _phase,
+                  _circleColor,
+                ]),
                 builder: (context, child) {
                   return Center(
                     child: BreathingCircle(
-                      scale: _scaleAnimation.value,
-                      color: _circleColor,
-                      phaseText: _phase,
+                      scale: _scaleAnimation!.value,
+                      color: _circleColor.value,
+                      phaseText: _phase.value,
                     ),
                   );
                 },
               ),
-
-              const SizedBox(height: 32),
-
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Text(
-                  _phase,
-                  key: ValueKey(_phase),
-                  style: ThemeTextStyles.headlineSmall(context),
-                  textAlign: TextAlign.center,
-                ),
+              SizedBox(height: AppSpacing.space3Xl),
+              ValueListenableBuilder<String>(
+                valueListenable: _phase,
+                builder: (context, phase, child) {
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: Text(
+                      phase,
+                      key: ValueKey(phase),
+                      style: ThemeTextStyles.headlineSmall(context).copyWith(
+                        color: context.extra.primaryTextColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                },
               ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                _subText,
-                style: ThemeTextStyles.bodyMedium(context),
-                textAlign: TextAlign.center,
+              SizedBox(height: AppSpacing.spaceSm),
+              ValueListenableBuilder<String>(
+                valueListenable: _subText,
+                builder: (context, subText, child) {
+                  return Text(
+                    subText,
+                    style: ThemeTextStyles.bodyMedium(context).copyWith(
+                      color: context.extra.secondaryTextColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  );
+                },
               ),
+              SizedBox(height: AppSpacing.spaceLg),
+              AnimatedBuilder(
+                animation: Listenable.merge([
+                  _isRunning,
+                  _isFinished,
+                  _currentRound,
+                ]),
+                builder: (context, child) {
+                  if (_isRunning.value && !_isFinished.value) {
+                    return Text(
+                      'Round ${_currentRound.value} of $_totalRounds',
+                      style: ThemeTextStyles.bodySmall(context).copyWith(
+                        color: context.extra.secondaryTextColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    );
+                  }
 
-              const SizedBox(height: 16),
+                  if (_isFinished.value) {
+                    return Text(
+                      'Well done! 🌸',
+                      style: ThemeTextStyles.labelLarge(context).copyWith(
+                        color: context.extra.primaryColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    );
+                  }
 
-              if (_isRunning && !_isFinished)
-                Text(
-                  'Round $_currentRound of $_totalRounds',
-                  style: ThemeTextStyles.bodySmall(context),
-                  textAlign: TextAlign.center,
-                ),
-
-              if (_isFinished)
-                Text(
-                  'Well done! 🌸',
-                  style: ThemeTextStyles.titleMedium(context).copyWith(
-                    color: const Color(0xFF2D6A4F),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
+                  return const SizedBox.shrink();
+                },
+              ),
               const Spacer(),
+              AnimatedBuilder(
+                animation: Listenable.merge([_isRunning, _isFinished]),
+                builder: (context, child) {
+                  if (_isRunning.value || _isFinished.value) {
+                    return const SizedBox.shrink();
+                  }
 
-              if (!_isRunning && !_isFinished)
-                Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _startExercise,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                  return Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        height: AppSpacing.space3Xl + AppSpacing.space2Xl,
+                        child: ElevatedButton(
+                          onPressed: _startExercise,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: context.extra.primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 0,
                           ),
-                          elevation: 0,
+                          child: Text(
+                            'Start Exercise',
+                            style: ThemeTextStyles.whiteButton(context).copyWith(
+                              color: context.extra.onPrimaryTextColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: AppSpacing.spaceMd),
+                      TextButton(
+                        onPressed: () => context.go(
+                          AppRoutes.affirmation,
+                          extra: widget.emoji,
                         ),
                         child: Text(
-                          'Start Exercise',
-                          style: ThemeTextStyles.whiteButton(context),
+                          'Skip',
+                          style: ThemeTextStyles.bodyMedium(context).copyWith(
+                            color: context.extra.secondaryTextColor,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () =>
-                          context.go('/affirmation', extra: widget.emoji),
-                      child: Text(
-                        'Skip',
-                        style: ThemeTextStyles.bodyMedium(context),
-                      ),
-                    ),
-                  ],
-                ),
-
-              const SizedBox(height: 32),
+                    ],
+                  );
+                },
+              ),
+              SizedBox(height: AppSpacing.space3Xl),
             ],
           ),
         ),

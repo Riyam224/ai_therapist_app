@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
+  // ── MindEase Breathing/Affirmation Palette ───────────────────────────────
+  static const Color scaffoldBg = Color(0xFFFFF8F2);
+  static const Color cardBg = Color(0xFFFFF0E8);
+  static const Color cardBorder = Color(0xFFFFD4B0);
+  static const Color mintBg = Color(0xFFC8EDD8);
+  static const Color textPrimary = Color(0xFF1A1A1A);
+  static const Color textSecondary = Color(0xFFA0785A);
+  static const Color breathInColor = Color(0xFFE8621A);
+  static const Color breathHoldColor = Color(0xFF2D6A4F);
+  static const Color breathOutColor = Color(0xFF85B7EB);
+  static const Color secondary = breathHoldColor;
+
   // ── Light Theme ──────────────────────────────────────────────────────────
   static const Color lightBackground = Color(0xFFFFF8F5);    // Scaffold
   static const Color lightSurface = Color(0xFFFFF0E8);       // Cards

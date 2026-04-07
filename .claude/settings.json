@@ -3,7 +3,12 @@
     "allow": [
       "Bash(flutter pub:*)",
       "Bash(flutter analyze:*)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git -C /Users/r/StudioProjects/ai_therapist_app diff 46fcf8a3c5f4fae2a87a4736a22b9c99b9f24519..3d6cce51b9e6aef67d2e0bcce7ea99d07583efad -- lib/features/breathing/presentation/screens/breathing_screen.dart)",
+      "Bash(git -C /Users/r/StudioProjects/ai_therapist_app log --oneline -10)",
+      "Bash(git -C /Users/r/StudioProjects/ai_therapist_app show 3d6cce51b9e6aef67d2e0bcce7ea99d07583efad --stat)"
     ]
   }
 }

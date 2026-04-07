@@ -31,6 +31,9 @@ class AuthCubit extends Cubit<AuthState> {
 
   void _listenToAuthChanges() {
     _authSub = Supabase.instance.client.auth.onAuthStateChange
+        .where((data) =>
+            data.event != AuthChangeEvent.tokenRefreshed &&
+            data.event != AuthChangeEvent.userUpdated)
         .map((data) {
           final session = data.session;
           if (session != null) {
@@ -40,13 +43,14 @@ class AuthCubit extends Cubit<AuthState> {
           return AuthUnauthenticated();
         })
         .listen((authState) {
-          if (!isClosed) emit(authState);
+          if (!isClosed && state is! AuthLoading) emit(authState);
         });
   }
 
   Future<void> login({required String email, required String password}) async {
     emit(AuthLoading());
     final result = await _loginUseCase(email: email, password: password);
+    if (isClosed) return;
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (user) => emit(AuthAuthenticated(user)),
@@ -64,6 +68,7 @@ class AuthCubit extends Cubit<AuthState> {
       password: password,
       name: name,
     );
+    if (isClosed) return;
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (user) => emit(AuthAuthenticated(user)),

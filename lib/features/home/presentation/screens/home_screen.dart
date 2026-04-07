@@ -24,8 +24,9 @@ class HomeScreen extends StatelessWidget {
   String get _userName {
     final user = Supabase.instance.client.auth.currentUser;
     final fullName = user?.userMetadata?['full_name'] as String?;
-    if (fullName != null && fullName.isNotEmpty)
+    if (fullName != null && fullName.isNotEmpty) {
       return fullName.split(' ').first;
+    }
     return user?.email?.split('@').first ?? 'Friend';
   }
 
@@ -36,8 +37,8 @@ class HomeScreen extends StatelessWidget {
         BlocProvider(
           create: (_) => sl<PlantCubit>()..loadPlant(),
         ),
-        BlocProvider(
-          create: (_) => sl<MoodCubit>()..loadEntries(),
+        BlocProvider.value(
+          value: sl<MoodCubit>(),
         ),
         BlocProvider(
           create: (_) => sl<WeeklyLetterCubit>()..load(),

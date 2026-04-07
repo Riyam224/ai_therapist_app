@@ -45,6 +45,30 @@ class MoodCubit extends Cubit<MoodState> {
     );
   }
 
+  Future<void> addLocalEntry({
+    required String emoji,
+    required String thoughts,
+  }) async {
+    _logger.i('MoodCubit: saving local entry...');
+
+    final result = await _repository.addLocalEntry(
+      emoji: emoji,
+      thoughts: thoughts,
+    );
+
+    result.fold(
+      (failure) {
+        _logger.e('MoodCubit local save error: ${failure.message}');
+        emit(MoodError(failure.message));
+      },
+      (entry) {
+        _logger.i('MoodCubit local save success — entry id: ${entry.id}');
+        _cachedEntries = [entry, ..._cachedEntries];
+        emit(MoodHistorySuccess(_cachedEntries, justGenerated: entry));
+      },
+    );
+  }
+
   // Delete a single entry from cache and update state
   Future<void> deleteEntry(int id) async {
     _cachedEntries = _cachedEntries.where((e) => e.id != id).toList();

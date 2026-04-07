@@ -6,6 +6,7 @@ import '../../domain/entities/mood_entry_entity.dart';
 import '../../domain/repositories/mood_repository.dart';
 import '../datasources/mood_local_datasource.dart';
 import '../datasources/mood_remote_datasource.dart';
+import '../models/mood_entry_model.dart';
 
 class MoodRepositoryImpl implements MoodRepository {
   final MoodRemoteDatasource _remote;
@@ -42,16 +43,43 @@ class MoodRepositoryImpl implements MoodRepository {
   }
 
   @override
+  Future<Either<Failure, MoodEntryEntity>> addLocalEntry({
+    required String emoji,
+    required String thoughts,
+  }) async {
+    try {
+      final localEntry = MoodEntryModel(
+        id: -DateTime.now().millisecondsSinceEpoch,
+        emoji: emoji,
+        thoughts: thoughts,
+        aiResponse: '',
+        createdAt: DateTime.now(),
+      );
+
+      await _local.addEntry(localEntry);
+      _logger.i('Local entry cached: ${localEntry.id}');
+      return Right(localEntry.toEntity());
+    } catch (e) {
+      _logger.e('Failed to cache local entry: $e');
+      return Left(NetworkFailure('Failed to save entry locally'));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<MoodEntryEntity>>> getHistory() async {
     try {
       _logger.i('Fetching mood history from API...');
 
       final models = await _remote.getHistory();
-      // Refresh cache with latest server data
-      await _local.cacheHistory(models);
+      final cached = _local.getCachedHistory();
+      final localOnly = cached.where((e) => e.id < 0).toList();
+      final merged = [...localOnly, ...models];
+
+      // Refresh cache with latest server data and keep local-only entries
+      await _local.cacheHistory(merged);
 
       _logger.i('Fetched ${models.length} entries from API');
-      return Right(models.map((m) => m.toEntity()).toList());
+      return Right(merged.map((m) => m.toEntity()).toList());
     } on DioException catch (e) {
       _logger.w('API failed, falling back to cache: ${e.message}');
       return _fallbackToCache(ServerFailure(e.message ?? 'Server error occurred'));

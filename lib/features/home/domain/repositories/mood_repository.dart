@@ -8,6 +8,11 @@ abstract class MoodRepository {
     required String thoughts,
   });
 
+  Future<Either<Failure, MoodEntryEntity>> addLocalEntry({
+    required String emoji,
+    required String thoughts,
+  });
+
   Future<Either<Failure, List<MoodEntryEntity>>> getHistory();
 
   Future<Either<Failure, void>> deleteEntry(int id);

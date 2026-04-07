@@ -8,6 +8,8 @@ import '../../features/auth/presentation/cubit/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/breathing/presentation/screens/breathing_screen.dart';
+import '../../features/affirmation/presentation/screens/affirmation_screen.dart';
 import '../../features/home/presentation/cubit/mood_cubit.dart';
 import '../../features/home/presentation/cubit/mood_state.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -17,7 +19,7 @@ import '../../features/response/presentation/screens/response_ai_screen.dart';
 
 class RouterGenerationConfig {
   static GoRouter goRouter = GoRouter(
-    initialLocation: AppRoutes.splash,
+    initialLocation: AppRoutes.breathing,
     routes: [
       // Splash
       GoRoute(
@@ -55,6 +57,9 @@ class RouterGenerationConfig {
               BlocProvider(create: (_) => sl<AuthCubit>()),
             ],
             child: BlocListener<AuthCubit, AuthState>(
+              listenWhen: (previous, current) =>
+                  previous is AuthAuthenticated &&
+                  current is AuthUnauthenticated,
               listener: (ctx, authState) {
                 if (authState is AuthUnauthenticated) {
                   ctx.go(AppRoutes.loginScreen);
@@ -113,6 +118,23 @@ class RouterGenerationConfig {
               thoughts: thoughts,
             ),
           );
+        },
+      ),
+
+      GoRoute(
+        name: AppRoutes.breathing,
+        path: AppRoutes.breathing,
+        builder: (context, state) {
+          final emoji = state.extra as String? ?? '😔';
+          return BreathingScreen(emoji: emoji);
+        },
+      ),
+      GoRoute(
+        name: AppRoutes.affirmation,
+        path: AppRoutes.affirmation,
+        builder: (context, state) {
+          final emoji = state.extra as String? ?? '😔';
+          return AffirmationScreen(emoji: emoji);
         },
       ),
     ],

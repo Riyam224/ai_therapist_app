@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 
 class BreathingCircle extends StatelessWidget {
@@ -31,7 +32,7 @@ class BreathingCircle extends StatelessWidget {
             height: 200,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.lightBorder,
+              color: context.extra.borderColor,
             ),
           ),
           // Inner animated circle
@@ -46,7 +47,9 @@ class BreathingCircle extends StatelessWidget {
             child: Center(
               child: Text(
                 phaseText,
-                style: ThemeTextStyles.whiteHeadline(context),
+                style: ThemeTextStyles.whiteHeadline(context).copyWith(
+                  color: context.extra.onPrimaryTextColor,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
