@@ -62,13 +62,12 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
               const SizedBox(height: 48),
-              const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  color: AppColors.primary,
-                  strokeWidth: 2.5,
-                ),
+              Lottie.asset(
+                'assets/lottie/plant_sprout.json',
+                width: 28,
+                height: 28,
+                fit: BoxFit.contain,
+                repeat: true,
               ),
             ],
           ),

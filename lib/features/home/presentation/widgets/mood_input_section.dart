@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/styling/theme_text_styles.dart';
@@ -98,6 +99,8 @@ class _MoodInputSectionState extends State<MoodInputSection> {
       );
       return;
     }
+
+    HapticFeedback.mediumImpact();
 
     final emojiUnicode = _emojiUnicodeMap[_selectedEmojiPath] ?? '😊';
 

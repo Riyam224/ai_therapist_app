@@ -33,6 +33,7 @@ class ThoughtsInputWidget extends StatelessWidget {
             fillColor: extraColors.cardBackgroundColor,
             hintText: 'What\'s on your mind today...',
             hintStyle: ThemeTextStyles.bodySmall(context),
+            counterText: '',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppSizes.borderRadiusLg),
               borderSide: BorderSide(
@@ -56,6 +57,20 @@ class ThoughtsInputWidget extends StatelessWidget {
             ),
             contentPadding: EdgeInsets.all(AppSpacing.horizontalPaddingMd),
           ),
+        ),
+        SizedBox(height: AppSpacing.spaceSm),
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, child) {
+            final count = value.text.trim().length;
+            return Text(
+              _encouragementForCount(count),
+              style: ThemeTextStyles.bodySmall(context).copyWith(
+                color: extraColors.secondaryTextColor,
+              ),
+              textAlign: TextAlign.left,
+            );
+          },
         ),
         SizedBox(height: AppSpacing.spaceLg),
 
@@ -81,7 +96,16 @@ class ThoughtsInputWidget extends StatelessWidget {
             ),
           ),
         ),
+        SizedBox(height: AppSpacing.sectionSpacingSm),
       ],
     );
+  }
+
+  String _encouragementForCount(int count) {
+    if (count < 50) return 'What\'s on your mind... 🌱';
+    if (count < 150) return 'Keep going...';
+    if (count < 300) return 'You\'re opening up 🌿';
+    if (count < 450) return 'Beautiful reflection 🌸';
+    return 'Luna is listening 💜';
   }
 }

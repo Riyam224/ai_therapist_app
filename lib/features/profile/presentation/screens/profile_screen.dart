@@ -8,6 +8,10 @@ import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../quotes/presentation/cubit/saved_quotes_cubit.dart';
+import '../../../quotes/presentation/cubit/saved_quotes_state.dart';
+import '../../../../core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/profile_avatar_widget.dart';
 import '../widgets/profile_stats_widget.dart';
 import '../widgets/profile_settings_section_widget.dart';
@@ -95,6 +99,99 @@ class ProfileScreen extends StatelessWidget {
               totalEntries: 27,
               thisWeek: 5,
               dayStreak: 3,
+            ),
+          ),
+        ),
+
+        // ── Saved Quotes ─────────────────────────────────
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.horizontalPaddingLg,
+            0,
+            AppSpacing.horizontalPaddingLg,
+            AppSpacing.sectionSpacingMd,
+          ),
+          sliver: SliverToBoxAdapter(
+            child: BlocBuilder<SavedQuotesCubit, SavedQuotesState>(
+              builder: (context, state) {
+                if (state is SavedQuotesLoaded) {
+                  if (state.quotes.isEmpty) {
+                    return Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(AppSpacing.spaceLg),
+                      decoration: BoxDecoration(
+                        color: context.extra.cardBackgroundColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: context.extra.borderColor ?? AppColors.lightBorder,
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text('📌', style: TextStyle(fontSize: 32)),
+                          SizedBox(height: AppSpacing.spaceSm),
+                          Text(
+                            'Saved quotes',
+                            style: ThemeTextStyles.titleMedium(context),
+                          ),
+                          SizedBox(height: AppSpacing.spaceXs),
+                          Text(
+                            'Your saved Luna moments will appear here',
+                            style: ThemeTextStyles.bodySmall(context).copyWith(
+                              color: context.extra.secondaryTextColor,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Saved quotes',
+                            style: ThemeTextStyles.headlineSmall(context),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () => context.go(AppRoutes.savedQuotes),
+                            icon: const Icon(Icons.chevron_right_rounded),
+                            color: context.extra.tertiaryTextColor,
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: AppSpacing.spaceSm),
+                      ...state.quotes.take(2).map(
+                        (quote) => Container(
+                          width: double.infinity,
+                          margin: EdgeInsets.only(bottom: AppSpacing.spaceMd),
+                          padding: EdgeInsets.all(AppSpacing.spaceLg),
+                          decoration: BoxDecoration(
+                            color: context.extra.cardBackgroundColor,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color:
+                                  context.extra.borderColor ?? AppColors.lightBorder,
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Text(
+                            '"${quote.text}"',
+                            style: ThemeTextStyles.bodyMedium(context),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                return const SizedBox.shrink();
+              },
             ),
           ),
         ),

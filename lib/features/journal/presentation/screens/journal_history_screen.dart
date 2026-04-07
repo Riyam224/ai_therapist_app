@@ -3,11 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/models/mood_entry.dart';
 import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/widgets/mood_entry_card.dart';
 import '../../../home/domain/entities/mood_entry_entity.dart';
 import '../../../home/presentation/cubit/mood_cubit.dart';
 import '../../../home/presentation/cubit/mood_state.dart';
 import '../../../../core/styling/theme_text_styles.dart';
+import '../../../../core/routing/app_routes.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
+import 'package:intl/intl.dart';
 import '../widgets/journal_emoji_filter_widget.dart';
 import '../widgets/journal_header_widget.dart';
 import '../widgets/journal_mood_graph_widget.dart';
@@ -33,10 +38,16 @@ class _JournalBodyState extends State<_JournalBody> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedEmoji;
   String _searchQuery = '';
+  final ValueNotifier<double> _pullExtent = ValueNotifier<double>(0);
+  bool _isRefreshing = false;
+
+  static const double _triggerExtent = 90;
+  static const double _maxExtent = 140;
 
   @override
   void dispose() {
     _searchController.dispose();
+    _pullExtent.dispose();
     super.dispose();
   }
 
@@ -60,16 +71,9 @@ class _JournalBodyState extends State<_JournalBody> {
 
   Color _colorForEmoji(String emoji) {
     const map = {
-      '😩': AppColors.primary,
-      '😰': AppColors.moodAnxious,
-      '😤': AppColors.moodSad,
-      '😢': AppColors.moodCalm,
-      '😔': AppColors.primary,
-      '😊': AppColors.moodHappy,
-      '😌': AppColors.lavender,
-      '😃': AppColors.moodHappy,
-      '🤩': AppColors.moodExcited,
-      '🥰': AppColors.blushPink,
+      '😔': AppColors.moodCalm,   // blue bar
+      '😊': AppColors.primary,    // peach bar
+      '🤩': AppColors.moodHappy,  // green bar
     };
     return map[emoji] ?? AppColors.moodNeutral;
   }
@@ -111,6 +115,83 @@ class _JournalBodyState extends State<_JournalBody> {
         .toList();
   }
 
+  String _formatTodayLabel() {
+    final now = DateTime.now();
+    final formatted = DateFormat('EEEE, MMMM d').format(now);
+    return 'Today — $formatted';
+  }
+
+  int _calculateStreakDays(List<MoodEntryEntity> entries) {
+    if (entries.isEmpty) return 0;
+    final dates = entries
+        .map((e) => DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    int streak = 0;
+    DateTime day = DateTime.now();
+    day = DateTime(day.year, day.month, day.day);
+    for (final date in dates) {
+      if (DateUtils.isSameDay(date, day)) {
+        streak++;
+        day = day.subtract(const Duration(days: 1));
+      } else if (date.isAfter(day)) {
+        continue;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  String _moodLabel(String emoji) {
+    const map = {
+      '😔': 'Sad',
+      '😊': 'Good',
+      '🤩': 'Great',
+      '😢': 'Tearful',
+      '😩': 'Tired',
+      '😰': 'Anxious',
+      '😭': 'Overwhelmed',
+      '😑': 'Meh',
+      '🙁': 'Low',
+    };
+    return map[emoji] ?? 'Okay';
+  }
+
+  String _todayMoodSummary(List<MoodEntryEntity> entries) {
+    final today = DateTime.now();
+    final todayEntries = entries.where((e) {
+      return DateUtils.isSameDay(e.createdAt, today);
+    }).toList();
+    if (todayEntries.isEmpty) {
+      return 'No entries yet · Start with one gentle thought';
+    }
+    final emojiCounts = <String, int>{};
+    for (final entry in todayEntries) {
+      emojiCounts.update(entry.emoji, (v) => v + 1, ifAbsent: () => 1);
+    }
+    final topEmoji = emojiCounts.entries
+        .reduce((a, b) => a.value >= b.value ? a : b)
+        .key;
+    final label = _moodLabel(topEmoji);
+    final count = todayEntries.length;
+    final entryLabel = count == 1 ? 'entry' : 'entries';
+    final streak = _calculateStreakDays(entries);
+    return 'You felt $topEmoji $label · $count $entryLabel · $streak day streak 🔥';
+  }
+
+  Future<void> _handleRefresh() async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    await context.read<MoodCubit>().getHistory();
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (!mounted) return;
+    setState(() => _isRefreshing = false);
+    _pullExtent.value = 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MoodCubit, MoodState>(
@@ -119,9 +200,33 @@ class _JournalBodyState extends State<_JournalBody> {
             ? state.entries
             : <MoodEntryEntity>[];
         final filtered = _filterAndMap(allEntities);
+        final showEmpty =
+            state is! MoodLoading && state is! MoodError && allEntities.isEmpty;
+        final showSummary = allEntities.isNotEmpty;
 
-        return CustomScrollView(
-          slivers: [
+        return Stack(
+          children: [
+            NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                final pixels = notification.metrics.pixels;
+                if (pixels < 0) {
+                  _pullExtent.value = (-pixels).clamp(0, _maxExtent);
+                } else if (notification is ScrollUpdateNotification &&
+                    notification.dragDetails != null) {
+                  if (_pullExtent.value != 0) _pullExtent.value = 0;
+                }
+
+                if (notification is ScrollEndNotification) {
+                  if (_pullExtent.value >= _triggerExtent && !_isRefreshing) {
+                    _handleRefresh();
+                  } else if (!_isRefreshing) {
+                    _pullExtent.value = 0;
+                  }
+                }
+                return false;
+              },
+              child: CustomScrollView(
+                slivers: [
             // ── Header ──────────────────────────────────────
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
@@ -140,35 +245,74 @@ class _JournalBodyState extends State<_JournalBody> {
               ),
             ),
 
-            // ── Search bar ───────────────────────────────────
-            SliverPadding(
-              padding: EdgeInsets.symmetric(
-                horizontal: AppSpacing.horizontalPaddingLg,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: JournalSearchBarWidget(
-                  controller: _searchController,
-                  onChanged: (query) => setState(() => _searchQuery = query),
+            if (showSummary)
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.horizontalPaddingLg,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(AppSpacing.spaceLg),
+                    decoration: BoxDecoration(
+                      color: context.extra.cardBackgroundColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: context.extra.borderColor ?? AppColors.cardBorder,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _formatTodayLabel(),
+                          style: ThemeTextStyles.labelSmall(context).copyWith(
+                            color: context.extra.secondaryTextColor,
+                          ),
+                        ),
+                        SizedBox(height: AppSpacing.spaceSm),
+                        Text(
+                          _todayMoodSummary(allEntities),
+                          style: ThemeTextStyles.bodyMedium(context),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+
+            // ── Search bar ───────────────────────────────────
+            if (!showEmpty)
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.horizontalPaddingLg,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: JournalSearchBarWidget(
+                    controller: _searchController,
+                    onChanged: (query) => setState(() => _searchQuery = query),
+                  ),
+                ),
+              ),
 
             // ── Emoji filter row ─────────────────────────────
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.horizontalPaddingLg,
-                AppSpacing.sectionSpacingSm,
-                AppSpacing.horizontalPaddingLg,
-                AppSpacing.sectionSpacingSm,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: JournalEmojiFilterWidget(
-                  selectedEmoji: _selectedEmoji,
-                  onEmojiSelected: (emoji) =>
-                      setState(() => _selectedEmoji = emoji),
+            if (!showEmpty)
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.horizontalPaddingLg,
+                  AppSpacing.sectionSpacingSm,
+                  AppSpacing.horizontalPaddingLg,
+                  AppSpacing.sectionSpacingSm,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: JournalEmojiFilterWidget(
+                    selectedEmoji: _selectedEmoji,
+                    onEmojiSelected: (emoji) =>
+                        setState(() => _selectedEmoji = emoji),
+                  ),
                 ),
               ),
-            ),
 
             // ── Mood graph ───────────────────────────────────
             if (allEntities.isNotEmpty)
@@ -186,8 +330,15 @@ class _JournalBodyState extends State<_JournalBody> {
 
             // ── Loading ──────────────────────────────────────
             if (state is MoodLoading)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
+              SliverFillRemaining(
+                child: Center(
+                  child: Lottie.asset(
+                    'assets/lottie/plant_sprout.json',
+                    width: 56,
+                    height: 56,
+                    repeat: true,
+                  ),
+                ),
               )
 
             // ── Error ────────────────────────────────────────
@@ -213,10 +364,62 @@ class _JournalBodyState extends State<_JournalBody> {
             // ── Empty ────────────────────────────────────────
             else if (filtered.isEmpty)
               SliverFillRemaining(
+                hasScrollBody: false,
                 child: Center(
-                  child: Text(
-                    'No entries found',
-                    style: ThemeTextStyles.bodyMedium(context),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.horizontalPaddingLg,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text(
+                          '🌱',
+                          style: TextStyle(fontSize: 56),
+                        ),
+                        SizedBox(height: AppSpacing.spaceLg),
+                        Text(
+                          'Your story starts here',
+                          style: ThemeTextStyles.headlineSmall(context),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: AppSpacing.spaceSm),
+                        Text(
+                          'What\'s on your mind today?',
+                          style: ThemeTextStyles.bodyMedium(context).copyWith(
+                            color: context.extra.secondaryTextColor,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: AppSpacing.spaceLg),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => context.go(AppRoutes.home),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: context.extra.primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                              padding: EdgeInsets.symmetric(
+                                vertical: AppSpacing.verticalPaddingLg,
+                              ),
+                            ),
+                            child: Text(
+                              'Start journaling',
+                              style: ThemeTextStyles.whiteButton(context)
+                                  .copyWith(
+                                color: context.extra.onPrimaryTextColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: AppSpacing.sectionSpacingLg),
+                      ],
+                    ),
                   ),
                 ),
               )
@@ -237,6 +440,33 @@ class _JournalBodyState extends State<_JournalBody> {
                       return Dismissible(
                         key: ValueKey(entry.id),
                         direction: DismissDirection.endToStart,
+                        confirmDismiss: (_) async {
+                          return await showDialog<bool>(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: const Text('Delete entry?'),
+                                  content: const Text(
+                                    'This will permanently remove this journal entry.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(dialogContext).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(dialogContext).pop(true),
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ) ??
+                              false;
+                        },
                         onDismissed: (_) {
                           context.read<MoodCubit>().deleteEntry(entry.id);
                         },
@@ -271,6 +501,46 @@ class _JournalBodyState extends State<_JournalBody> {
                   ),
                 ),
               ),
+            SliverToBoxAdapter(
+              child: SizedBox(height: AppSpacing.sectionSpacingLg),
+            ),
+                ],
+              ),
+            ),
+            ValueListenableBuilder<double>(
+              valueListenable: _pullExtent,
+              builder: (context, extent, child) {
+                if (!_isRefreshing && extent <= 0) {
+                  return const SizedBox.shrink();
+                }
+
+                final height = _isRefreshing
+                    ? _triggerExtent.toDouble()
+                    : extent.clamp(0.0, _triggerExtent.toDouble()) as double;
+                final opacity = _isRefreshing
+                    ? 1.0
+                    : (extent / _triggerExtent).clamp(0.0, 1.0);
+
+                return IgnorePointer(
+                  child: SafeArea(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Opacity(
+                        opacity: opacity,
+                        child: SizedBox(
+                          height: height,
+                          child: Lottie.asset(
+                            'assets/lottie/plant_sprout.json',
+                            fit: BoxFit.contain,
+                            repeat: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         );
       },

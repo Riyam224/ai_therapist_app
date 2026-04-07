@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/theme_text_styles.dart';
@@ -30,15 +31,18 @@ String _stripEmojis(String text) {
 /// AI response card with lavender background showing Luna's response
 class AiResponseCardWidget extends StatelessWidget {
   final String response;
+  final VoidCallback? onBookmark;
 
   const AiResponseCardWidget({
     super.key,
     required this.response,
+    this.onBookmark,
   });
 
   @override
   Widget build(BuildContext context) {
     final responseStyle = ThemeTextStyles.bodyMedium(context);
+    final cleanedResponse = _stripEmojis(response);
 
     return Container(
       width: double.infinity,
@@ -55,20 +59,42 @@ class AiResponseCardWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Label
-          Text(
-            'LUNA SAYS',
-            style: ThemeTextStyles.labelSmall(context).copyWith(
-              color: AppColors.lavender,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
+          Row(
+            children: [
+              Text(
+                'LUNA SAYS',
+                style: ThemeTextStyles.labelSmall(context).copyWith(
+                  color: AppColors.lavender,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const Spacer(),
+              if (onBookmark != null)
+                IconButton(
+                  onPressed: onBookmark,
+                  icon: const Icon(Icons.bookmark_border),
+                  color: AppColors.lavender,
+                  tooltip: 'Save quote',
+                  visualDensity: VisualDensity.compact,
+                ),
+            ],
           ),
           SizedBox(height: AppSpacing.spaceMd),
 
           // AI Response — emojis stripped to avoid broken glyph rendering
-          Text(
-            _stripEmojis(response),
-            style: responseStyle,
+          GestureDetector(
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: cleanedResponse));
+              HapticFeedback.mediumImpact();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Copied to clipboard 🌿')),
+              );
+            },
+            child: Text(
+              cleanedResponse,
+              style: responseStyle,
+            ),
           ),
         ],
       ),

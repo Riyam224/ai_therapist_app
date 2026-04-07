@@ -9,11 +9,13 @@ import 'core/injection/injection.dart';
 import 'core/routing/router_generation_config.dart';
 import 'core/styling/app_theme.dart';
 import 'features/home/data/datasources/mood_local_datasource.dart';
+import 'features/quotes/data/datasources/saved_quotes_local_datasource.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await Hive.openBox<String>(MoodLocalDatasource.boxName);
+  await Hive.openBox<String>(SavedQuotesLocalDatasource.boxName);
   // load .env first
   await dotenv.load(fileName: '.env');
   await Supabase.initialize(

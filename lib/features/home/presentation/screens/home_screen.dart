@@ -5,6 +5,8 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/injection/injection.dart';
 import '../../../../core/models/mood_entry.dart';
 import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_extensions.dart';
+import '../../../../core/styling/theme_text_styles.dart';
 import '../../../plant/presentation/cubit/plant_cubit.dart';
 import '../../domain/entities/mood_entry_entity.dart';
 import '../cubit/mood_cubit.dart';
@@ -16,6 +18,7 @@ import '../widgets/mood_input_section.dart';
 import '../widgets/recent_entries_header.dart';
 import '../widgets/recent_entries_list.dart';
 import '../widgets/weekly_letter_banner.dart';
+import 'package:lottie/lottie.dart';
 
 /// Home screen — main entry point of the app
 class HomeScreen extends StatelessWidget {
@@ -49,10 +52,18 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _HomeScreenBody extends StatelessWidget {
+class _HomeScreenBody extends StatefulWidget {
   const _HomeScreenBody({required this.userName});
 
   final String userName;
+
+  @override
+  State<_HomeScreenBody> createState() => _HomeScreenBodyState();
+}
+
+class _HomeScreenBodyState extends State<_HomeScreenBody> {
+  int _lastEntryCount = 0;
+  bool _confettiShown = false;
 
   /// Maps a MoodEntryEntity (from API) to a MoodEntry (UI model)
   List<MoodEntry> _toUiEntries(
@@ -133,6 +144,15 @@ class _HomeScreenBody extends StatelessWidget {
           MoodHistorySuccess(:final entries) => _toUiEntries(context, entries),
           _ => <MoodEntry>[],
         };
+        final showEmpty = state is MoodHistorySuccess && entries.isEmpty;
+        final shouldShowConfetti = state is MoodHistorySuccess &&
+            entries.length == 1 &&
+            _lastEntryCount == 0 &&
+            !_confettiShown;
+
+        if (state is MoodHistorySuccess) {
+          _lastEntryCount = entries.length;
+        }
 
         return CustomScrollView(
           slivers: [
@@ -145,7 +165,7 @@ class _HomeScreenBody extends StatelessWidget {
                 AppSpacing.verticalPaddingLg,
               ),
               sliver: SliverToBoxAdapter(
-                child: HomeHeader(userName: userName),
+                child: HomeHeader(userName: widget.userName),
               ),
             ),
 
@@ -155,7 +175,7 @@ class _HomeScreenBody extends StatelessWidget {
                 horizontal: AppSpacing.horizontalPaddingLg,
               ),
               sliver: SliverToBoxAdapter(
-                child: GreetingCard(userName: userName),
+                child: GreetingCard(userName: widget.userName),
               ),
             ),
 
@@ -199,10 +219,17 @@ class _HomeScreenBody extends StatelessWidget {
 
             // Loading indicator
             if (state is MoodLoading)
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Center(child: CircularProgressIndicator()),
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Lottie.asset(
+                      'assets/lottie/plant_sprout.json',
+                      width: 48,
+                      height: 48,
+                      repeat: true,
+                    ),
+                  ),
                 ),
               ),
 
@@ -233,6 +260,102 @@ class _HomeScreenBody extends StatelessWidget {
                 sliver: RecentEntriesList(
                   entries: entries,
                   onDelete: (id) => context.read<MoodCubit>().deleteEntry(id),
+                ),
+              ),
+
+            if (showEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.horizontalPaddingLg,
+                    AppSpacing.sectionSpacingSm,
+                    AppSpacing.horizontalPaddingLg,
+                    AppSpacing.sectionSpacingSm,
+                  ),
+                  child: Column(
+                    children: [
+                      const Text('🌱', style: TextStyle(fontSize: 44)),
+                      SizedBox(height: AppSpacing.spaceMd),
+                      Text(
+                        'Your story starts here',
+                        style: ThemeTextStyles.headlineSmall(context),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: AppSpacing.spaceSm),
+                      Text(
+                        'Share a thought and tap Talk to Luna',
+                        style: ThemeTextStyles.bodyMedium(context).copyWith(
+                          color: context.extra.secondaryTextColor,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            SliverToBoxAdapter(
+              child: SizedBox(height: AppSpacing.sectionSpacingLg),
+            ),
+
+            if (shouldShowConfetti)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Container(
+                    margin: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.horizontalPaddingLg,
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.horizontalPaddingLg,
+                      vertical: AppSpacing.verticalPaddingLg,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.extra.cardBackgroundColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: context.extra.borderColor ?? AppColors.cardBorder,
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: context.extra.shadowColor ?? Colors.black12,
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Lottie.asset(
+                          'assets/lottie/blooming.json',
+                          width: 140,
+                          height: 140,
+                          repeat: false,
+                          onLoaded: (_) {
+                            if (!_confettiShown) {
+                              setState(() => _confettiShown = true);
+                            }
+                          },
+                        ),
+                        SizedBox(height: AppSpacing.spaceMd),
+                        Text(
+                          'You just planted your first seed 🌱',
+                          style: ThemeTextStyles.headlineSmall(context),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: AppSpacing.spaceSm),
+                        Text(
+                          'Luna is so happy you\'re here!',
+                          style: ThemeTextStyles.bodyMedium(context).copyWith(
+                            color: context.extra.secondaryTextColor,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
           ],

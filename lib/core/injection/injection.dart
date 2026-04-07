@@ -16,6 +16,13 @@ import '../../features/home/data/repositories/mood_repository_impl.dart';
 import '../../features/home/domain/repositories/mood_repository.dart';
 import '../../features/home/presentation/cubit/mood_cubit.dart';
 import '../../features/home/presentation/cubit/weekly_letter_cubit.dart';
+import '../../features/quotes/data/datasources/saved_quotes_local_datasource.dart';
+import '../../features/quotes/data/repositories/saved_quotes_repository_impl.dart';
+import '../../features/quotes/domain/repositories/saved_quotes_repository.dart';
+import '../../features/quotes/domain/usecases/delete_quote_usecase.dart';
+import '../../features/quotes/domain/usecases/get_saved_quotes_usecase.dart';
+import '../../features/quotes/domain/usecases/save_quote_usecase.dart';
+import '../../features/quotes/presentation/cubit/saved_quotes_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -53,17 +60,37 @@ void setupInjection() {
   );
   sl.registerLazySingleton<MoodLocalDatasource>(() => MoodLocalDatasource());
 
+  // ── Saved Quotes DataSource ──
+  sl.registerLazySingleton<SavedQuotesLocalDatasource>(
+    () => SavedQuotesLocalDatasource(),
+  );
+
   // ── Mood Repository ──
   sl.registerLazySingleton<MoodRepository>(
     () => MoodRepositoryImpl(sl(), sl()),
   );
 
+  // ── Saved Quotes Repository ──
+  sl.registerLazySingleton<SavedQuotesRepository>(
+    () => SavedQuotesRepositoryImpl(sl()),
+  );
+
   // ── Mood Cubit — singleton so all screens share state ──
   sl.registerLazySingleton(() => MoodCubit(sl()));
+
+  // ── Saved Quotes UseCases ──
+  sl.registerLazySingleton(() => GetSavedQuotesUseCase(sl()));
+  sl.registerLazySingleton(() => SaveQuoteUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteQuoteUseCase(sl()));
 
   // ── Weekly Letter Cubit — factory ──
   sl.registerFactory<WeeklyLetterCubit>(
     () => WeeklyLetterCubit(sl<MoodRemoteDatasource>()),
+  );
+
+  // ── Saved Quotes Cubit — factory ──
+  sl.registerFactory<SavedQuotesCubit>(
+    () => SavedQuotesCubit(sl(), sl(), sl()),
   );
 
   sl.registerLazySingleton<StreakRepository>(

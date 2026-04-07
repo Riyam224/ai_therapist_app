@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../../data/models/weekly_letter_model.dart';
@@ -55,13 +56,14 @@ class _WeeklyLetterBannerState extends State<WeeklyLetterBanner>
         if (state is WeeklyLetterLoading) {
           return _shell(
             context,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                child: Lottie.asset(
+                  'assets/lottie/plant_sprout.json',
+                  width: 24,
+                  height: 24,
+                  repeat: true,
                 ),
               ),
             ),

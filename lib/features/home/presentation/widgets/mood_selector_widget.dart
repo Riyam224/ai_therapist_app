@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/styling/theme_text_styles.dart';
@@ -38,7 +39,10 @@ class MoodSelectorWidget extends StatelessWidget {
                 child: EmojiEntryMood(
                   emojiAsset: emojiPath,
                   isSelected: selectedEmoji == emojiPath,
-                  onTap: () => onEmojiSelected(emojiPath),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    onEmojiSelected(emojiPath);
+                  },
                   moodColor: moodColors != null && index < moodColors!.length
                       ? moodColors![index]
                       : null,

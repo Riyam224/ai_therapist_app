@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../../../../core/styling/app_colors.dart';
@@ -10,6 +14,7 @@ import '../../../../core/routing/app_routes.dart';
 import '../../../../core/navigation/app_bottom_nav_bar.dart';
 import '../../../home/presentation/cubit/mood_cubit.dart';
 import '../../../home/presentation/cubit/mood_state.dart';
+import '../../../quotes/presentation/cubit/saved_quotes_cubit.dart';
 import '../widgets/luna_avatar_widget.dart';
 import '../widgets/luna_info_widget.dart';
 import '../widgets/user_mood_card_widget.dart';
@@ -19,10 +24,6 @@ import '../widgets/action_buttons_widget.dart';
 import '../widgets/after_feeling_selector_widget.dart';
 
 class ResponseAiScreen extends StatefulWidget {
-  final String? emojiImagePath;
-  final String? emojiUnicode;
-  final String thoughts;
-
   const ResponseAiScreen({
     super.key,
     this.emojiImagePath,
@@ -30,11 +31,18 @@ class ResponseAiScreen extends StatefulWidget {
     this.thoughts = '',
   });
 
+  final String? emojiImagePath;
+  final String? emojiUnicode;
+  final String thoughts;
+
   @override
   State<ResponseAiScreen> createState() => _ResponseAiScreenState();
 }
 
 class _ResponseAiScreenState extends State<ResponseAiScreen> {
+  bool _didResponseHaptic = false;
+  final ScreenshotController _screenshotController = ScreenshotController();
+
   @override
   void initState() {
     super.initState();
@@ -110,74 +118,98 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
 
             // ── Body ────────────────────────────────────────
             Expanded(
-              child: BlocBuilder<MoodCubit, MoodState>(
-                builder: (context, state) {
+              child: BlocListener<MoodCubit, MoodState>(
+                listenWhen: (previous, current) {
+                  if (_didResponseHaptic) return false;
+                  return current is MoodHistorySuccess &&
+                      current.justGenerated != null &&
+                      current.justGenerated!.aiResponse.isNotEmpty;
+                },
+                listener: (context, state) {
+                  HapticFeedback.lightImpact();
+                  _didResponseHaptic = true;
+                },
+                child: BlocBuilder<MoodCubit, MoodState>(
+                  builder: (context, state) {
                   if (state is MoodLoading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(child: LunaTypingIndicator());
                   }
 
-                  if (state is MoodError) {
-                    return Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(AppSpacing.horizontalPaddingLg),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              color: AppColors.errorColor,
-                              size: 48,
-                            ),
-                            SizedBox(height: AppSpacing.spaceMd),
-                            Text(
-                              state.message,
-                              textAlign: TextAlign.center,
-                              style: ThemeTextStyles.bodyMedium(context),
-                            ),
-                            SizedBox(height: AppSpacing.spaceLg),
-                            ElevatedButton(
-                              onPressed: () {
-                                if (widget.emojiUnicode != null) {
-                                  context.read<MoodCubit>().generateResponse(
-                                    emoji: widget.emojiUnicode!,
-                                    thoughts: widget.thoughts,
-                                  );
-                                }
-                              },
-                              child: const Text('Try again'),
-                            ),
-                          ],
+                    if (state is MoodError) {
+                      return Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSpacing.horizontalPaddingLg),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                color: AppColors.errorColor,
+                                size: 48,
+                              ),
+                              SizedBox(height: AppSpacing.spaceMd),
+                              Text(
+                                state.message,
+                                textAlign: TextAlign.center,
+                                style: ThemeTextStyles.bodyMedium(context),
+                              ),
+                              SizedBox(height: AppSpacing.spaceLg),
+                              ElevatedButton(
+                                onPressed: () {
+                                  if (widget.emojiUnicode != null) {
+                                    _didResponseHaptic = false;
+                                    context.read<MoodCubit>().generateResponse(
+                                      emoji: widget.emojiUnicode!,
+                                      thoughts: widget.thoughts,
+                                    );
+                                  }
+                                },
+                                child: const Text('Try again'),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  }
+                      );
+                    }
 
-                  // Success or initial (show content)
-                  final generated = state is MoodHistorySuccess
-                      ? state.justGenerated
-                      : null;
+                    // Success or initial (show content)
+                    final generated = state is MoodHistorySuccess
+                        ? state.justGenerated
+                        : null;
                   final aiResponse = generated?.aiResponse ?? '';
                   final displayThoughts = generated?.thoughts ?? widget.thoughts;
 
-                  return SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppSpacing.horizontalPaddingLg,
-                    ),
-                    child: Column(
-                      children: [
-                        SizedBox(height: AppSpacing.spaceLg),
-                        const LunaAvatarWidget(),
-                        SizedBox(height: AppSpacing.spaceMd),
-                        const LunaInfoWidget(),
-                        SizedBox(height: AppSpacing.sectionSpacingMd),
-                        UserMoodCardWidget(
-                          emoji: widget.emojiImagePath ?? AppAssets.emojiOverwhelmed,
-                          thoughts: displayThoughts,
-                          isEmojiImage: true,
-                        ),
-                        SizedBox(height: AppSpacing.spaceLg),
+                    return SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.horizontalPaddingLg,
+                      ),
+                      child: Column(
+                        children: [
+                          SizedBox(height: AppSpacing.spaceLg),
+                          const LunaAvatarWidget(),
+                          SizedBox(height: AppSpacing.spaceMd),
+                          const LunaInfoWidget(),
+                          SizedBox(height: AppSpacing.sectionSpacingMd),
+                          UserMoodCardWidget(
+                            emoji: widget.emojiImagePath ?? AppAssets.emojiOverwhelmed,
+                            thoughts: displayThoughts,
+                            isEmojiImage: true,
+                          ),
+                          SizedBox(height: AppSpacing.spaceLg),
                         if (aiResponse.isNotEmpty) ...[
-                          AiResponseCardWidget(response: aiResponse),
+                            AiResponseCardWidget(
+                              response: aiResponse,
+                              onBookmark: () {
+                                context
+                                    .read<SavedQuotesCubit>()
+                                    .saveQuote(aiResponse);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Saved to quotes 🌿'),
+                                  ),
+                                );
+                              },
+                            ),
                           SizedBox(height: AppSpacing.spaceLg),
                           const MoodTagsRowWidget(
                             tags: ['Expressing', 'Reflecting', 'Growing'],
@@ -187,19 +219,197 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
                             onSave: () => context.go(AppRoutes.journal),
                             onTalkAgain: () => context.go(AppRoutes.home),
                           ),
+                          SizedBox(height: AppSpacing.spaceMd),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () => _shareResponse(aiResponse),
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: AppSpacing.spaceLg,
+                                ),
+                                side: BorderSide(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
+                                  width: 1.5,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16.r),
+                                ),
+                              ),
+                              child: Text(
+                                'Share',
+                                style:
+                                    ThemeTextStyles.labelMedium(context).copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
+                                ),
+                              ),
+                            ),
+                          ),
                           SizedBox(height: AppSpacing.spaceLg),
                           const AfterFeelingSelectorWidget(),
                           SizedBox(height: AppSpacing.sectionSpacingMd),
                         ],
-                      ],
-                    ),
-                  );
-                },
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+extension _ShareHelper on _ResponseAiScreenState {
+  Future<void> _shareResponse(String aiResponse) async {
+    if (aiResponse.trim().isEmpty) return;
+
+    final bytes = await _screenshotController.captureFromWidget(
+      _buildShareCard(context, aiResponse),
+      pixelRatio: 3.0,
+    );
+
+    final file = File(
+      '${Directory.systemTemp.path}/luna_share_${DateTime.now().millisecondsSinceEpoch}.png',
+    );
+    await file.writeAsBytes(bytes);
+    final box = context.findRenderObject() as RenderBox?;
+    final origin = box != null
+        ? (box.localToGlobal(Offset.zero) & box.size)
+        : null;
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      sharePositionOrigin: origin,
+    );
+  }
+
+  Widget _buildShareCard(BuildContext context, String aiResponse) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.scaffoldBackgroundColor,
+      child: Container(
+        width: 1080,
+        padding: const EdgeInsets.all(64),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.12),
+              theme.colorScheme.primary.withValues(alpha: 0.02),
+            ],
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Luna says',
+              style: ThemeTextStyles.labelMedium(context).copyWith(
+                color: theme.colorScheme.primary,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              '"$aiResponse"',
+              style: ThemeTextStyles.headlineSmall(context).copyWith(
+                color: theme.colorScheme.onSurface,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 40),
+            Text(
+              'MindEase · LunaSpace',
+              style: ThemeTextStyles.bodySmall(context).copyWith(
+                color: theme.colorScheme.primary.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LunaTypingIndicator extends StatefulWidget {
+  const LunaTypingIndicator({super.key});
+
+  @override
+  State<LunaTypingIndicator> createState() => _LunaTypingIndicatorState();
+}
+
+class _LunaTypingIndicatorState extends State<LunaTypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = ThemeTextStyles.bodyMedium(context);
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final value = _controller.value;
+        final dot1 = value < 0.33 ? 1.0 : 0.3;
+        final dot2 = value >= 0.33 && value < 0.66 ? 1.0 : 0.3;
+        final dot3 = value >= 0.66 ? 1.0 : 0.3;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Luna is thinking', style: textStyle),
+            SizedBox(height: AppSpacing.spaceSm),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _Dot(opacity: dot1),
+                SizedBox(width: AppSpacing.spaceSm),
+                _Dot(opacity: dot2),
+                SizedBox(width: AppSpacing.spaceSm),
+                _Dot(opacity: dot3),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  const _Dot({required this.opacity});
+
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: opacity,
+      child: const Text('●'),
     );
   }
 }

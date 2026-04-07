@@ -123,7 +123,7 @@ class _BreathingScreenState extends State<BreathingScreen>
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.horizontalPaddingXl,
           ),
@@ -227,7 +227,7 @@ class _BreathingScreenState extends State<BreathingScreen>
                   return const SizedBox.shrink();
                 },
               ),
-              const Spacer(),
+              SizedBox(height: AppSpacing.space3Xl),
               AnimatedBuilder(
                 animation: Listenable.merge([_isRunning, _isFinished]),
                 builder: (context, child) {

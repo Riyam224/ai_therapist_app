@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
@@ -209,13 +210,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         child: isLoading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
+                            ? Lottie.asset(
+                                'assets/lottie/plant_sprout.json',
+                                width: 24,
+                                height: 24,
+                                repeat: true,
                               )
                             : const Text(
                                 'Talk to Luna',

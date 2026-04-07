@@ -43,7 +43,7 @@ class _AffirmationScreenState extends State<AffirmationScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.horizontalPaddingXl,
           ),

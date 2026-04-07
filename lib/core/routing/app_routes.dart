@@ -8,6 +8,7 @@ class AppRoutes {
   static const String profile = '/profile';
 
   static const String response = '/response';
+  static const String savedQuotes = '/savedQuotes';
 
   static const String breathing = '/breathing';
   static const String affirmation = '/affirmation';

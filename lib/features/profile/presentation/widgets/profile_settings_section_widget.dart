@@ -45,28 +45,6 @@ class ProfileSettingsSectionWidget extends StatelessWidget {
         _divider(context),
 
         _SettingsItem(
-          icon: Icons.notifications_rounded,
-          iconColor: const Color(0xFFE8A020),
-          iconBgColor: const Color(0xFFFFF4E0),
-          label: 'Notifications',
-          trailing: _chevron(context),
-          onTap: () {},
-        ),
-
-        _divider(context),
-
-        _SettingsItem(
-          icon: Icons.language_rounded,
-          iconColor: const Color(0xFF2196A0),
-          iconBgColor: const Color(0xFFE0F5F7),
-          label: 'Language',
-          trailing: _chevron(context),
-          onTap: () {},
-        ),
-
-        _divider(context),
-
-        _SettingsItem(
           icon: Icons.auto_awesome_rounded,
           iconColor: const Color(0xFFD45CA0),
           iconBgColor: const Color(0xFFFFEBF5),
