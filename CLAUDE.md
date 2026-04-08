@@ -1,13 +1,14 @@
-# CLAUDE.md — MindEase Flutter Project
+# CLAUDE.md — LunaSpace Flutter Project
 
 ## Project Overview
 
-**App Name:** MindEase  
-**Tagline:** Your pocket therapist  
-**Type:** AI Therapist Mood Journal — Flutter mobile app  
-**Backend:** Django REST Framework deployed on Railway  
-**AI:** GROQ API (llama-3.1-8b-instant)  
-**Developer:** Riyam  
+**App Name:** LunaSpace
+**Tagline:** Your pocket therapist
+**Type:** AI Therapist Mood Journal — Flutter mobile app
+**Backend:** Django REST Framework deployed on Railway
+**Auth:** Supabase (email/password + Google OAuth)
+**AI:** GROQ API (llama-3.1-8b-instant)
+**Developer:** Riyam
 
 ---
 
@@ -19,17 +20,21 @@
 
 ```
 POST /api/therapist/generate/
-  Request:  { "emoji": "😔", "thoughts": "I feel overwhelmed" }
+  Request:  { "user_id": "<uuid>", "emoji": "😔", "thoughts": "I feel overwhelmed" }
   Response: {
     "id": 1,
+    "user_id": "abc123",
     "emoji": "😔",
     "thoughts": "I feel overwhelmed",
     "ai_response": "It sounds like you're carrying a lot...",
-    "created_at": "2026-03-27T12:00:00Z"
+    "created_at": "2026-04-08T12:00:00Z"
   }
 
-GET /api/therapist/history/
-  Response: [ { "id": 1, "emoji": "...", "thoughts": "...", "ai_response": "...", "created_at": "..." } ]
+GET /api/therapist/history/?user_id=<uuid>
+  Response: [ { "id": 1, "user_id": "...", "emoji": "...", "thoughts": "...", "ai_response": "...", "created_at": "..." } ]
+
+GET /api/therapist/weekly-letter/
+  Response: { "letter": "...", "stats": { "entryCount": 5, "dominantEmoji": "😔", "streak": 3, "weekStart": "...", "weekEnd": "..." } }
 ```
 
 ---
@@ -39,62 +44,110 @@ GET /api/therapist/history/
 ```
 lib/
 ├── core/
-│   ├── theme/
-│   │   ├── app_colors.dart         ← all colors defined here
-│   │   ├── app_theme.dart          ← light + dark ThemeData
-│   │   └── app_text_styles.dart    ← all text styles
-│   ├── network/
-│   │   ├── dio_client.dart         ← Dio singleton with interceptors
-│   │   └── api_endpoints.dart      ← all endpoint constants
-│   ├── error/
-│   │   ├── failures.dart           ← Failure classes
-│   │   └── exceptions.dart         ← Exception classes
-│   ├── usecases/
-│   │   └── usecase.dart            ← abstract UseCase<T, Params>
-│   └── utils/
-│       ├── date_formatter.dart
-│       └── constants.dart          ← all string constants
+│   ├── constants/
+│   │   ├── app_spacing.dart        ← spacing constants
+│   │   └── app_sizes.dart          ← size constants
+│   ├── cubits/
+│   │   └── theme_cubit.dart        ← dark/light mode, persisted in Hive
+│   ├── errors/
+│   │   └── failures.dart           ← NetworkFailure, ServerFailure
+│   ├── injection/
+│   │   └── injection.dart          ← GetIt DI setup
+│   ├── models/
+│   │   └── mood_entry.dart         ← UI display model (not domain entity)
+│   ├── navigation/
+│   │   ├── main_shell_screen.dart  ← bottom nav shell
+│   │   └── app_bottom_nav_bar.dart ← glass-morphism bottom nav
+│   ├── networking/
+│   │   ├── dio_helper.dart         ← Dio singleton with PrettyDioLogger
+│   │   └── api_endpoints.dart      ← all endpoint constants + base URL
+│   ├── routing/
+│   │   ├── router_generation_config.dart ← GoRouter with all routes
+│   │   └── app_routes.dart         ← route path constants
+│   └── styling/
+│       ├── app_colors.dart         ← all color constants (light + dark)
+│       ├── app_theme.dart          ← ThemeData light + dark
+│       ├── app_extra_colors.dart   ← ThemeExtension for mood colors
+│       ├── theme_extensions.dart   ← context.extra helper
+│       ├── theme_text_styles.dart  ← all text styles
+│       ├── app_fonts.dart          ← font family names
+│       └── app_assets.dart         ← asset path constants
 │
 ├── features/
-│   └── mood/
-│       ├── data/
-│       │   ├── models/
-│       │   │   └── mood_entry_model.dart
-│       │   ├── datasources/
-│       │   │   ├── mood_remote_datasource.dart
-│       │   │   └── mood_local_datasource.dart
-│       │   └── repositories/
-│       │       └── mood_repository_impl.dart
-│       ├── domain/
-│       │   ├── entities/
-│       │   │   └── mood_entry.dart
-│       │   ├── repositories/
-│       │   │   └── mood_repository.dart
-│       │   └── usecases/
-│       │       ├── generate_response_usecase.dart
-│       │       └── get_history_usecase.dart
+│   ├── affirmation/
+│   │   ├── data/
+│   │   │   └── affirmations_data.dart   ← emoji → affirmation list map
+│   │   └── presentation/
+│   │       └── screens/affirmation_screen.dart
+│   │
+│   ├── auth/
+│   │   ├── data/
+│   │   │   ├── datasources/supabase_auth_datasource.dart
+│   │   │   ├── models/user_model.dart
+│   │   │   └── repositories/auth_repository_impl.dart
+│   │   ├── domain/
+│   │   │   ├── entities/user_entity.dart
+│   │   │   ├── repositories/auth_repository.dart
+│   │   │   └── usecases/ (login, register, logout)
+│   │   └── presentation/
+│   │       ├── cubit/ (auth_cubit, auth_state)
+│   │       └── screens/ (splash, login, register)
+│   │
+│   ├── breathing/
+│   │   └── presentation/
+│   │       ├── screens/breathing_screen.dart
+│   │       └── widgets/breathing_circle.dart
+│   │
+│   ├── home/
+│   │   ├── data/
+│   │   │   ├── datasources/
+│   │   │   │   ├── mood_remote_datasource.dart
+│   │   │   │   └── mood_local_datasource.dart
+│   │   │   ├── models/
+│   │   │   │   ├── mood_entry_model.dart       ← @JsonSerializable
+│   │   │   │   ├── mood_entry_model.g.dart     ← generated
+│   │   │   │   └── weekly_letter_model.dart
+│   │   │   └── repositories/mood_repository_impl.dart
+│   │   ├── domain/
+│   │   │   ├── entities/mood_entry_entity.dart
+│   │   │   └── repositories/mood_repository.dart
+│   │   └── presentation/
+│   │       ├── cubit/ (mood_cubit, mood_state, weekly_letter_cubit)
+│   │       ├── screens/home_screen.dart
+│   │       └── widgets/ (greeting_card, mood_input_section, weekly_letter_banner, etc.)
+│   │
+│   ├── journal/
+│   │   └── presentation/
+│   │       ├── screens/journal_history_screen.dart
+│   │       └── widgets/ (search, emoji filter, mood graph)
+│   │
+│   ├── plant/
+│   │   ├── data/repositories/streak_repository.dart
+│   │   ├── domain/entities/plant_stage.dart
+│   │   └── presentation/cubit/ (plant_cubit, plant_state)
+│   │
+│   ├── profile/
+│   │   └── presentation/
+│   │       ├── screens/profile_screen.dart
+│   │       └── widgets/ (avatar, stats, settings section)
+│   │
+│   ├── quotes/
+│   │   ├── data/
+│   │   │   ├── datasources/saved_quotes_local_datasource.dart
+│   │   │   ├── models/saved_quote_model.dart
+│   │   │   └── repositories/saved_quotes_repository_impl.dart
+│   │   ├── domain/
+│   │   │   ├── entities/saved_quote_entity.dart
+│   │   │   ├── repositories/saved_quotes_repository.dart
+│   │   │   └── usecases/ (get, save, delete)
+│   │   └── presentation/
+│   │       ├── cubit/ (saved_quotes_cubit, saved_quotes_state)
+│   │       └── screens/saved_quotes_screen.dart
+│   │
+│   └── response/
 │       └── presentation/
-│           ├── cubit/
-│           │   ├── mood_cubit.dart
-│           │   └── mood_state.dart
-│           ├── screens/
-│           │   ├── home_screen.dart
-│           │   ├── response_screen.dart
-│           │   ├── history_screen.dart
-│           │   └── profile_screen.dart
-│           └── widgets/
-│               ├── mood_card.dart
-│               ├── emoji_selector.dart
-│               ├── luna_avatar.dart
-│               ├── loading_button.dart
-│               ├── empty_state.dart
-│               └── mood_chip.dart
-│
-├── router/
-│   └── app_router.dart             ← go_router configuration
-│
-├── injection/
-│   └── injection.dart              ← get_it dependency injection
+│           ├── screens/response_ai_screen.dart
+│           └── widgets/ (luna_avatar, user_mood_card, ai_response_card, etc.)
 │
 └── main.dart
 ```
@@ -105,43 +158,24 @@ lib/
 
 ```yaml
 dependencies:
-  flutter:
-    sdk: flutter
-
-  # Navigation
-  go_router: ^14.0.0
-
-  # State Management
-  flutter_bloc: ^8.1.6
-  equatable: ^2.0.5
-
-  # Network
-  dio: ^5.4.3
-  retrofit: ^4.1.0
-
-  # Local Storage
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
-
-  # Dependency Injection
-  get_it: ^7.7.0
-
-  # Error Handling
-  dartz: ^0.10.1
-
-  # Environment
-  flutter_dotenv: ^5.1.0
-
-  # UI
-  flutter_svg: ^2.0.10+1
-  lottie: ^3.1.0
-  cached_network_image: ^3.3.1
+  flutter_bloc: ^8.x        # state management (Cubit)
+  go_router: ^14.x          # navigation
+  get_it: ^7.x              # dependency injection
+  dartz: ^0.10.x            # Either for error handling
+  dio: ^5.x                 # HTTP client
+  hive_flutter: ^1.x        # local storage
+  supabase_flutter: ^2.x    # auth + Supabase client
+  json_annotation: ^4.x     # JSON serialization
+  equatable: ^2.x           # value equality
+  flutter_dotenv: ^5.x      # .env loading
+  lottie: ^3.x              # animations
+  flutter_screenutil: ^5.x  # responsive sizing
+  logger: ^2.x              # structured logging
 
 dev_dependencies:
-  build_runner: ^2.4.9
-  retrofit_generator: ^8.1.0
-  hive_generator: ^2.0.1
-  json_serializable: ^6.8.0
+  build_runner: ^2.x
+  json_serializable: ^6.x
+  hive_generator: ^2.x
 ```
 
 ---
@@ -151,66 +185,89 @@ dev_dependencies:
 ### Colors (from app_colors.dart)
 
 ```dart
-// Primary — Light Purple (main brand color)
-AppColors.primary500  // #6C5CE7  ← buttons, active icons
-AppColors.primary50   // #F0EEFF  ← backgrounds, tints
-AppColors.primary200  // #C0B8FF  ← borders, soft fills
+// Light theme
+AppColors.primary            // #E8621A — peach, CTA buttons
+AppColors.lightBackground    // #FFF8F5 — scaffold
+AppColors.lightSurface       // #FFF0E8 — cards
+AppColors.lightOnBackground  // #2D2016 — primary text
+AppColors.lightSecondaryText // #7A5038 — labels, hints
+AppColors.lightBorder        // #FFD4B8 — borders
+AppColors.primaryContainer   // #5BBFA0 — mint, AI bubbles
 
-// Accent — Soft Pink
-AppColors.pink500     // #E84393  ← highlights, user bubbles
-AppColors.pink50      // #FFF0F5  ← user mood card background
+// Dark theme
+AppColors.darkBackground     // #16132A — scaffold
+AppColors.darkSurface        // #1E1A35 — cards
+AppColors.primaryDark        // #7C5CDB — purple, buttons
+AppColors.darkOnBackground   // #EDE9FE — primary text
+AppColors.darkSecondaryText  // #6B6490 — labels
+AppColors.darkBorder         // #2D2850 — borders
 
-// Lavender
-AppColors.lavender500 // #9180E8  ← AI response cards
-AppColors.lavender50  // #F7F5FF  ← AI bubble background
+// Mood colors
+AppColors.moodHappy   // #4CAF50
+AppColors.moodCalm    // #2196F3
+AppColors.moodSad     // #FF9800
+AppColors.moodExcited // #FFC107
+AppColors.moodAnxious // #F44336
+AppColors.moodNeutral // #9E9E9E
 
-// Mint — success/positive
-AppColors.mint500     // #18A887
-AppColors.mint50      // #EEFBF7
+// Breathing exercise
+AppColors.breathInColor   // #E8621A
+AppColors.breathHoldColor // #2D6A4F
+AppColors.breathOutColor  // #85B7EB
+```
 
-// Neutral
-AppColors.neutral900  // #1C1A2E  ← primary text
-AppColors.neutral600  // #6E698C  ← secondary text
-AppColors.neutral400  // #AEA8C8  ← tertiary/muted text
-AppColors.neutral100  // #F2F0F8  ← surface variant
-AppColors.neutral200  // #E4E0F0  ← borders
+### Theme-aware colors in widgets
 
-// Dark mode
-AppColors.darkBackground   // #0F0E18
-AppColors.darkSurface      // #1A1828
-AppColors.darkCardBg       // #1E1C30
-AppColors.darkBorder       // #2E2C42
+Always use `context.extra` (AppExtraColors ThemeExtension) or `Theme.of(context).colorScheme`:
+
+```dart
+final extra = context.extra;
+extra.primaryColor        // adapts to light/dark
+extra.cardBackgroundColor
+extra.primaryTextColor
+extra.secondaryTextColor
+extra.borderColor
+
+// Or via colorScheme
+final cs = Theme.of(context).colorScheme;
+cs.primary    // button color
+cs.surface    // card/input fill
+cs.outline    // borders
+cs.error      // error states
+cs.onSurface  // text on surface
 ```
 
 ### Typography
 
+Always use `ThemeTextStyles` — never hardcode font sizes:
+
 ```dart
-// Always use AppTextStyles — never hardcode font sizes
-AppTextStyles.displayLarge(context)   // 32px Bold
-AppTextStyles.headlineMedium(context) // 18px SemiBold
-AppTextStyles.bodyMedium(context)     // 14px Regular
-AppTextStyles.labelSmall(context)     // 11px Medium
-AppTextStyles.caption(context)        // 11px Regular muted
+ThemeTextStyles.headlineLarge(context)
+ThemeTextStyles.headlineSmall(context)
+ThemeTextStyles.bodyMedium(context)
+ThemeTextStyles.labelSmall(context)
 ```
 
 ### Border Radius
 
 ```dart
-8.0   // chips, tags, small elements
-16.0  // buttons, inputs, small cards
+8.0   // chips, tags
+14.0  // input fields
+16.0  // buttons
 20.0  // cards
 28.0  // bottom sheets, modals
-999.0 // avatars, emoji buttons (circles)
+999.0 // circles (avatars, emoji buttons)
 ```
 
-### Spacing Grid (8px base)
+### Spacing (8px grid)
 
-```
-4px  → micro gaps
-8px  → tight spacing between elements
-16px → default horizontal padding
-24px → section spacing
-32px → large section gaps
+```dart
+AppSpacing.spaceSm              // 8px
+AppSpacing.spaceMd              // 16px
+AppSpacing.spaceLg              // 24px
+AppSpacing.horizontalPaddingLg  // main horizontal padding
+AppSpacing.sectionSpacingSm     // between sections
+AppSpacing.topPaddingSafeArea   // top of scrollable content
 ```
 
 ---
@@ -220,34 +277,78 @@ AppTextStyles.caption(context)        // 11px Regular muted
 ### Cubit States
 
 ```dart
-// mood_state.dart
-abstract class MoodState extends Equatable {}
-
-class MoodInitial extends MoodState {}
-class MoodLoading extends MoodState {}
-class MoodGenerateSuccess extends MoodState {
-  final MoodEntry entry;
+sealed class MoodState extends Equatable {
+  const MoodState();
 }
+class MoodInitial extends MoodState { const MoodInitial(); }
+class MoodLoading extends MoodState { const MoodLoading(); }
 class MoodHistorySuccess extends MoodState {
-  final List<MoodEntry> entries;
-  final List<MoodEntry> filtered; // for search/filter
+  final List<MoodEntryEntity> entries;
+  final MoodEntryEntity? justGenerated;
+  const MoodHistorySuccess(this.entries, {this.justGenerated});
 }
 class MoodError extends MoodState {
   final String message;
+  const MoodError(this.message);
 }
 ```
 
-### Cubit Methods
+### Cubit in DI
 
 ```dart
-// mood_cubit.dart
-class MoodCubit extends Cubit<MoodState> {
-  Future<void> generateResponse(String emoji, String thoughts) async { ... }
-  Future<void> getHistory() async { ... }
-  void filterByEmoji(String emoji) { ... }
-  void searchHistory(String query) { ... }
-  void clearFilter() { ... }
+// Singletons — shared across all screens/tabs
+sl.registerLazySingleton(() => MoodCubit(sl()));
+
+// Factories — new instance per screen
+sl.registerFactory(() => AuthCubit(...));
+sl.registerFactory(() => WeeklyLetterCubit(sl()));
+sl.registerFactory(() => PlantCubit(sl()));
+sl.registerFactory(() => SavedQuotesCubit(sl(), sl(), sl()));
+```
+
+---
+
+## Domain Entities
+
+### MoodEntryEntity
+
+```dart
+class MoodEntryEntity extends Equatable {
+  final int id;
+  final String userId;     // Supabase user UUID
+  final String emoji;
+  final String thoughts;
+  final String aiResponse;
+  final DateTime createdAt;
 }
+```
+
+### UserEntity
+
+```dart
+class UserEntity {
+  final String id;     // Supabase UUID
+  final String email;
+  final String? name;  // from full_name metadata
+}
+```
+
+### SavedQuoteEntity
+
+```dart
+class SavedQuoteEntity {
+  final String id;       // timestamp-based string ID
+  final String text;
+  final DateTime savedAt;
+}
+```
+
+### PlantStage
+
+```dart
+enum PlantStage { seed, sprout, seedling, youngPlant, blooming }
+// PlantStage.fromStreak(int days) → maps days to stage
+// 0 → seed, 1-6 → sprout, 7-13 → seedling, 14-27 → youngPlant, 28+ → blooming
 ```
 
 ---
@@ -255,21 +356,25 @@ class MoodCubit extends Cubit<MoodState> {
 ## Navigation (go_router)
 
 ```dart
-// app_router.dart
-final appRouter = GoRouter(
-  routes: [
-    GoRoute(path: '/',          builder: (_, __) => const HomeScreen()),
-    GoRoute(path: '/response',  builder: (_, state) => ResponseScreen(entry: state.extra as MoodEntry)),
-    GoRoute(path: '/history',   builder: (_, __) => const HistoryScreen()),
-    GoRoute(path: '/profile',   builder: (_, __) => const ProfileScreen()),
-  ],
-);
+// All routes defined in AppRoutes constants
+AppRoutes.splash         // '/splash'
+AppRoutes.loginScreen    // '/loginScreen'
+AppRoutes.registerScreen // '/registerScreen'
+AppRoutes.home           // '/home'    (bottom nav tab 0)
+AppRoutes.journal        // '/journal' (bottom nav tab 1)
+AppRoutes.profile        // '/profile' (bottom nav tab 2)
+AppRoutes.response       // '/response'
+AppRoutes.breathing      // '/breathing'
+AppRoutes.affirmation    // '/affirmation'
+AppRoutes.savedQuotes    // '/savedQuotes'
 
-// Navigate to response screen:
-context.go('/response', extra: moodEntry);
-
-// Navigate back:
-context.pop();
+// Navigate
+context.go(AppRoutes.home);
+context.go(AppRoutes.response, extra: {
+  'emojiPath': path,        // nullable — image-based emoji
+  'emojiUnicode': '😔',    // nullable — unicode emoji
+  'thoughts': thoughts,
+});
 ```
 
 ---
@@ -277,18 +382,17 @@ context.pop();
 ## Error Handling
 
 ```dart
-// Always use Either from dartz
-Future<Either<Failure, MoodEntry>> generateResponse(String emoji, String thoughts);
+// All repository methods return Either
+Future<Either<Failure, MoodEntryEntity>> generateResponse(...);
 
-// Failures
-class NetworkFailure extends Failure {}   // no internet
-class ServerFailure extends Failure {}    // API error (4xx, 5xx)
-class CacheFailure extends Failure {}     // Hive error
+// Failure types
+class NetworkFailure extends Failure {}  // connectivity / unexpected errors
+class ServerFailure extends Failure {}   // API 4xx/5xx
 
-// In Cubit — fold the Either:
+// In cubit — fold the Either
 result.fold(
-  (failure) => emit(MoodError(_mapFailureToMessage(failure))),
-  (entry)   => emit(MoodGenerateSuccess(entry)),
+  (failure) => emit(MoodError(failure.message)),
+  (entry)   => emit(MoodHistorySuccess([entry], justGenerated: entry)),
 );
 ```
 
@@ -297,18 +401,12 @@ result.fold(
 ## Local Storage (Hive)
 
 ```dart
-// Hive box names
-const String kMoodBox = 'mood_entries';
-const String kSettingsBox = 'settings';
+// Box names + types
+Hive.box<String>('mood_cache')    // key: 'entries'   — JSON list of MoodEntryModel
+Hive.box<String>('saved_quotes')  // key: 'quotes'    — JSON list of SavedQuoteModel
+Hive.box<bool>('settings')        // key: 'dark_mode' — theme preference (bool)
 
-// Keys
-const String kLastEmoji = 'last_emoji';
-const String kDarkMode  = 'dark_mode';
-
-// Usage
-final box = Hive.box<MoodEntryModel>(kMoodBox);
-await box.add(moodEntryModel);
-final entries = box.values.toList();
+// All boxes opened in main() before runApp
 ```
 
 ---
@@ -316,8 +414,8 @@ final entries = box.values.toList();
 ## Dependency Injection (get_it)
 
 ```dart
-// injection.dart — always register in this order:
-// 1. External (Dio, Hive)
+// Registration order in setupInjection():
+// 1. External  (DioHelper, SupabaseClient)
 // 2. DataSources
 // 3. Repositories
 // 4. UseCases
@@ -325,33 +423,32 @@ final entries = box.values.toList();
 
 final sl = GetIt.instance;
 
-void setupInjection() {
-  // Cubit — always factory (new instance per page)
-  sl.registerFactory(() => MoodCubit(
-    generateResponse: sl(),
-    getHistory: sl(),
-  ));
+// Access anywhere in the app
+sl<MoodCubit>()
+sl<AuthCubit>()         // creates new instance each time (factory)
+sl<DioHelper>().dio     // the Dio instance
+sl<SupabaseClient>()    // Supabase.instance.client
+```
 
-  // UseCases — lazy singleton
-  sl.registerLazySingleton(() => GenerateResponseUseCase(sl()));
-  sl.registerLazySingleton(() => GetHistoryUseCase(sl()));
+---
 
-  // Repository
-  sl.registerLazySingleton<MoodRepository>(
-    () => MoodRepositoryImpl(remote: sl(), local: sl()),
-  );
+## Auth Flow
 
-  // DataSources
-  sl.registerLazySingleton<MoodRemoteDatasource>(
-    () => MoodRemoteDatasourceImpl(sl()),
-  );
-  sl.registerLazySingleton<MoodLocalDatasource>(
-    () => MoodLocalDatasourceImpl(),
-  );
+```
+User opens app
+  → SplashScreen (4s)
+  → Supabase auth listener in main.dart
+      → session exists → go('/home')
+      → no session    → go('/loginScreen')
 
-  // Dio
-  sl.registerLazySingleton(() => DioClient().dio);
-}
+Login / Register:
+  Screen → AuthCubit → UseCase → AuthRepository
+  → SupabaseAuthDatasource → Supabase SDK
+  → success: emit AuthAuthenticated → main.dart listener → go('/home')
+
+Logout:
+  ProfileScreen → AuthCubit.logout() → Supabase.auth.signOut()
+  → Shell BlocListener detects AuthUnauthenticated → go('/loginScreen')
 ```
 
 ---
@@ -359,117 +456,105 @@ void setupInjection() {
 ## Screens Reference
 
 ### HomeScreen
-- Greeting hero card (purple gradient)
-- Emoji mood selector (horizontal scroll, 9 emojis)
-- Multiline thoughts input (max 500 chars)
-- "Talk to Luna ✨" button → calls `generateResponse`
-- Recent entries list (last 3 from Hive cache)
-- On success → navigate to `/response`
 
-### ResponseScreen
-- Receives `MoodEntry` via `GoRouterState.extra`
-- Luna avatar (🌸) + name + subtitle
-- User mood card (pink bg) — shows emoji + thoughts
-- AI response card (lavender bg) — typewriter animation
-- Mood tags row (auto chips)
-- "Save to journal" + "Talk again" buttons
-- After-feeling selector (4 emojis)
+- Provides: `PlantCubit..loadPlant()`, `MoodCubit` (value), `WeeklyLetterCubit..load()`
+- `GreetingCard` — time-based greeting, Lottie animation, streak badge (PlantCubit)
+- `WeeklyLetterBanner` — weekly reflection stats
+- `MoodInputSection` — emoji selector + thoughts TextField
+- `RecentEntriesList` — entries from MoodCubit state
+- First-entry confetti animation (blooming.json, one-time)
 
-### HistoryScreen
-- Fetches all entries from API + Hive cache
-- Search bar (filters thoughts text)
-- Emoji filter chips (All + 8 emojis)
-- MoodCard list with colored left border by mood
-- Pull-to-refresh
-- Tap card → bottom sheet with full entry
-- Empty state illustration when no entries
-- Shimmer loading on cards
+### ResponseAiScreen
+
+- Receives via route extra: `emojiImagePath`, `emojiUnicode`, `thoughts`
+- Calls `MoodCubit.generateResponse(emoji, thoughts)` on init
+- `BlocListener` on `MoodHistorySuccess(justGenerated:)` → renders AI response
+- Mood tag chips, after-feeling emoji selector
+- Save quote → `SavedQuotesCubit.saveQuote(aiResponse)`
+- Share → screenshot + Share.shareXFiles()
+
+### JournalHistoryScreen
+
+- Search bar filters by thoughts text
+- Emoji chip filter
+- Pull-to-refresh → `MoodCubit.getHistory()`
+- Mood graph visualization
 
 ### ProfileScreen
-- Avatar with initials "R" (purple gradient)
-- Stats: total entries, this week, streak
-- Settings: dark mode toggle, notifications, language, about Luna, privacy
 
----
+- Avatar with user initials
+- Stats: total entries, this week, streak days
+- Dark mode toggle → `ThemeCubit.toggleTheme()`
+- Navigate to SavedQuotes
+- Logout → `AuthCubit.logout()`
 
-## MoodCard Left Border Colors
+### BreathingScreen
 
-```dart
-// Map emoji to color
-String emoji → Color:
-'😔' → AppColors.primary500   // purple
-'😊' → AppColors.mint500      // green
-'😢' → Color(0xFF85B7EB)      // blue
-'😰' → Color(0xFFF0A500)      // amber
-'😡' → Color(0xFFE84343)      // red
-'😴' → AppColors.lavender500  // lavender
-'😌' → AppColors.pink500      // pink
-'🥰' → AppColors.pink300      // light pink
-'😤' → Color(0xFFF76B3A)      // peach
-```
+- 4-7-8 technique: breathe in 4s → hold 7s → breathe out 8s × 3 rounds
+- Animated circle (scale + color per phase)
+- Haptic feedback on phase transitions
+
+### AffirmationScreen
+
+- Emoji-specific affirmation cards from `affirmations_data.dart`
+- Swipe/tap to cycle through
+- Emoji map: 😔 😢 😰 😩 😭 😑 🙁 + default fallback
 
 ---
 
 ## Code Rules
 
 ### Always Do
+
 - Use `const` constructors everywhere possible
-- Separate every widget into its own file
-- Use `AppColors` and `AppTextStyles` — never hardcode
+- Use `AppColors`, `context.extra`, `Theme.of(context).colorScheme` — never hardcode hex in widgets
+- Use `ThemeTextStyles` — never hardcode font sizes
 - Use `Either<Failure, T>` for all repository methods
-- Register Cubits as `factory` in get_it (not singleton)
-- Use `BlocProvider` at screen level, not app level
-- Handle all 3 states: loading, success, error
+- Register shared Cubits as `lazySingleton`, per-screen Cubits as `factory`
+- Use `BlocBuilder` for UI rebuilds, `BlocListener` for navigation and SnackBars
 - Add `SafeArea` to every screen
-- Use `context.read<MoodCubit>()` for events
-- Use `BlocBuilder` for UI rebuilds
-- Use `BlocListener` for navigation and SnackBars
+- Handle all 3 states: loading, success, error
 
 ### Never Do
+
 - Never put business logic in UI (screens/widgets)
-- Never hardcode colors or text styles
+- Never hardcode colors, sizes, or text styles in widgets
 - Never use `setState` — use Cubit instead
 - Never call API directly from UI
 - Never use `Navigator.push` — use `context.go()`
 - Never ignore failures — always show user feedback
-- Never store sensitive data (API keys) in code
+- Never store secrets (API keys, Supabase keys) in code — use `.env`
 - Never use `late` without initialization
+- Never mix architecture layers (no Dio calls in Cubit)
 
 ### File Naming
+
 ```
 snake_case for all files:
   home_screen.dart
-  mood_entry.dart
+  mood_entry_entity.dart
   mood_repository_impl.dart
-  generate_response_usecase.dart
 
 PascalCase for classes:
   class HomeScreen extends StatelessWidget
-  class MoodEntry extends Equatable
+  class MoodEntryEntity extends Equatable
 ```
 
 ---
 
-## API Integration Example
+## Important Notes for Claude
 
-```dart
-// mood_remote_datasource.dart
-class MoodRemoteDatasourceImpl implements MoodRemoteDatasource {
-  final Dio dio;
-
-  Future<MoodEntryModel> generateResponse(String emoji, String thoughts) async {
-    try {
-      final response = await dio.post(
-        ApiEndpoints.generate,
-        data: {'emoji': emoji, 'thoughts': thoughts},
-      );
-      return MoodEntryModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw ServerException(message: e.message ?? 'Server error');
-    }
-  }
-}
-```
+- **Clean Architecture strictly** — never suggest mixing layers
+- **Cubit only** — never suggest Bloc events unless explicitly asked
+- **go_router only** — never use Navigator.push
+- All API calls go through **Repository → DataSource** chain
+- The backend is **already built and deployed** — do not change API structure
+- Colors and styles from **AppColors / context.extra / ThemeTextStyles only** — never hardcode in widgets
+- **MoodCubit is a lazy singleton** — all tabs share the same instance
+- **Theme is persisted in Hive** — ThemeCubit reads Hive on init, writes on toggle
+- **User isolation** — all API calls include `user_id` from `Supabase.auth.currentUser?.id`; local cache fallback filters by userId
+- **Login and Register screens are theme-aware** — use `context.extra` and `Theme.of(context).colorScheme`, never hardcoded light colors
+- The app personality is **warm, calming, supportive** — keep UI soft and rounded
 
 ---
 
@@ -479,7 +564,7 @@ class MoodRemoteDatasourceImpl implements MoodRemoteDatasource {
 # Install packages
 flutter pub get
 
-# Generate code (Hive adapters + Retrofit)
+# Generate code (Hive adapters + JSON serialization)
 dart run build_runner build --delete-conflicting-outputs
 
 # Run app
@@ -499,46 +584,15 @@ flutter build ios --release
 ## Environment Variables
 
 Create `.env` in project root (never commit to git):
-```
-BASE_URL=https://web-production-f8628.up.railway.app
-```
 
-Load in main.dart:
-```dart
-await dotenv.load(fileName: '.env');
-```
-
-Use in code:
-```dart
-final baseUrl = dotenv.env['BASE_URL'] ?? '';
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
 ```
 
 Add to `.gitignore`:
-```
+
+```gitignore
 .env
 *.env
 ```
-
----
-
-## Key Design Decisions
-
-1. **Cubit over Bloc** — simpler for this app size, no complex event mapping needed
-2. **Hive over SQLite** — faster setup, no schema migrations, good for simple models
-3. **Dio over http** — interceptors for logging and auth headers
-4. **go_router over Navigator 2.0** — declarative, supports deep linking
-5. **get_it over Provider for DI** — decoupled from widget tree, testable
-6. **dartz Either** — explicit error handling, no silent failures
-
----
-
-## Important Notes for Claude
-
-- This project uses **Clean Architecture strictly** — never suggest mixing layers
-- State management is **Cubit only** — never suggest Bloc events unless asked
-- Navigation is **go_router only** — never use Navigator.push
-- All API calls go through **UseCase → Repository → DataSource** chain
-- The backend is **already built and deployed** — do not change API structure
-- Colors come from **AppColors only** — never suggest hardcoded hex in widgets
-- The app personality is **warm, feminine, calming** — keep UI soft and rounded
-- Font family is **DM Sans** (display) + **Inter** (body) — not system fonts
