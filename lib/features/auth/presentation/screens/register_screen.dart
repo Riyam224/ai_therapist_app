@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 import '../../../../core/routing/app_routes.dart';
-import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 
@@ -16,15 +15,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  static const _primaryColor = AppColors.primary;
-  static const _secondaryColor = Color(0xFF2D6A4F);
-  static const _secondaryText = AppColors.lightSecondaryText;
-  static const _cardBorder = AppColors.lightBorder;
-  static const _textPrimary = AppColors.lightOnBackground;
-  static const _textHint = Color(0xFFD4B5A0);
-  static const _mintBg = Color(0xFFC8EDD8);
-  static const _errorColor = Color(0xFFE24B4A);
-
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -62,46 +52,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  Color get _strengthColor {
-    if (_passwordStrength <= 0.33) return _errorColor;
+  Color _strengthColor(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    if (_passwordStrength <= 0.33) return cs.error;
     if (_passwordStrength <= 0.66) return const Color(0xFFEF9F27);
-    return _secondaryColor;
+    return cs.primary;
   }
 
   InputDecoration _fieldDecoration({
+    required BuildContext context,
     required String label,
     required String hint,
     Widget? suffixIcon,
   }) {
+    final cs = Theme.of(context).colorScheme;
+    final extra = context.extra;
     return InputDecoration(
       label: Text(
         label,
-        style: const TextStyle(
-          color: _secondaryColor,
+        style: TextStyle(
+          color: extra.primaryColor,
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
       ),
       hintText: hint,
-      hintStyle: const TextStyle(color: _textHint),
+      hintStyle: TextStyle(color: extra.secondaryTextColor),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: cs.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _cardBorder, width: 1.5),
+        borderSide: BorderSide(color: cs.outline, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _secondaryColor, width: 2),
+        borderSide: BorderSide(color: cs.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _errorColor, width: 2),
+        borderSide: BorderSide(color: cs.error, width: 2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _errorColor, width: 2),
+        borderSide: BorderSide(color: cs.error, width: 2),
       ),
       suffixIcon: suffixIcon,
     );
@@ -109,6 +103,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final extra = context.extra;
+    final textPrimary = extra.primaryTextColor!;
+    final secondaryText = extra.secondaryTextColor!;
+    final primaryColor = extra.primaryColor!;
+    final borderColor = cs.outline;
+
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
@@ -117,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: _primaryColor,
+              backgroundColor: primaryColor,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -127,7 +128,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.lightBackground,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -135,13 +135,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 52),
-                // Plant avatar — mint background
+                // Plant avatar
                 Center(
                   child: Container(
                     width: 88,
                     height: 88,
-                    decoration: const BoxDecoration(
-                      color: _mintBg,
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer,
                       shape: BoxShape.circle,
                     ),
                     child: Lottie.asset(
@@ -152,18 +152,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
-                const Text(
+                Text(
                   'Start your journey',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w600,
-                    color: _textPrimary,
+                    color: textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Luna is ready to listen 🌱',
-                  style: TextStyle(fontSize: 14, color: _secondaryText),
+                  style: TextStyle(fontSize: 14, color: secondaryText),
                 ),
                 const SizedBox(height: 32),
                 // Full name field
@@ -172,7 +172,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.name,
                   textInputAction: TextInputAction.next,
                   textCapitalization: TextCapitalization.words,
+                  style: TextStyle(color: textPrimary),
                   decoration: _fieldDecoration(
+                    context: context,
                     label: 'Full name',
                     hint: 'Your name',
                   ),
@@ -183,7 +185,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
+                  style: TextStyle(color: textPrimary),
                   decoration: _fieldDecoration(
+                    context: context,
                     label: 'Email',
                     hint: 'your@email.com',
                   ),
@@ -195,7 +199,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.done,
                   onChanged: _onPasswordChanged,
+                  style: TextStyle(color: textPrimary),
                   decoration: _fieldDecoration(
+                    context: context,
                     label: 'Password',
                     hint: '••••••••',
                     suffixIcon: IconButton(
@@ -203,11 +209,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         _obscurePassword
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
-                        color: _secondaryText,
+                        color: secondaryText,
                       ),
-                      onPressed: () => setState(
-                        () => _obscurePassword = !_obscurePassword,
-                      ),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                 ),
@@ -219,14 +224,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: LinearProgressIndicator(
                       value: _passwordStrength,
                       minHeight: 3,
-                      backgroundColor: _cardBorder,
-                      valueColor: AlwaysStoppedAnimation(_strengthColor),
+                      backgroundColor: borderColor,
+                      valueColor:
+                          AlwaysStoppedAnimation(_strengthColor(context)),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _passwordStrengthLabel,
-                    style: TextStyle(fontSize: 11, color: _strengthColor),
+                    style: TextStyle(
+                        fontSize: 11, color: _strengthColor(context)),
                   ),
                 ],
                 const SizedBox(height: 24),
@@ -246,7 +253,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   name: _nameController.text.trim(),
                                 ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _secondaryColor,
+                          backgroundColor: primaryColor,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -275,19 +282,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Divider
                 Row(
                   children: [
-                    Expanded(
-                      child: Divider(color: _cardBorder, thickness: 1),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
+                    Expanded(child: Divider(color: borderColor, thickness: 1)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         'or',
-                        style: TextStyle(color: _secondaryText, fontSize: 12),
+                        style: TextStyle(color: secondaryText, fontSize: 12),
                       ),
                     ),
-                    Expanded(
-                      child: Divider(color: _cardBorder, thickness: 1),
-                    ),
+                    Expanded(child: Divider(color: borderColor, thickness: 1)),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -296,21 +299,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: double.infinity,
                   height: 52,
                   child: OutlinedButton.icon(
-                    onPressed: () => context.read<AuthCubit>().signInWithGoogle(),
+                    onPressed: () =>
+                        context.read<AuthCubit>().signInWithGoogle(),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: _cardBorder, width: 1.5),
+                      side: BorderSide(color: borderColor, width: 1.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      foregroundColor: _textPrimary,
+                      foregroundColor: textPrimary,
                     ),
                     icon: const _GoogleIcon(),
                     label: const Text(
                       'Sign up with Google',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -320,19 +321,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: GestureDetector(
                     onTap: () => context.go(AppRoutes.loginScreen),
                     child: RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         children: [
                           TextSpan(
                             text: 'Already have an account? ',
-                            style: TextStyle(
-                              color: _secondaryText,
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: secondaryText, fontSize: 13),
                           ),
                           TextSpan(
                             text: 'Sign in',
                             style: TextStyle(
-                              color: _primaryColor,
+                              color: primaryColor,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),

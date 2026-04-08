@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lottie/lottie.dart';
 import '../../../../core/routing/app_routes.dart';
-import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 
@@ -16,14 +15,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  static const _primaryColor = AppColors.primary;
-  static const _secondaryText = AppColors.lightSecondaryText;
-  static const _cardBorder = AppColors.lightBorder;
-  static const _textPrimary = AppColors.lightOnBackground;
-  static const _textHint = Color(0xFFD4B5A0);
-  static const _peachBg = Color(0xFFFFD4B0);
-  static const _errorColor = Color(0xFFE24B4A);
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -36,39 +27,42 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   InputDecoration _fieldDecoration({
+    required BuildContext context,
     required String label,
     required String hint,
     Widget? suffixIcon,
   }) {
+    final cs = Theme.of(context).colorScheme;
+    final extra = context.extra;
     return InputDecoration(
       label: Text(
         label,
-        style: const TextStyle(
-          color: Color(0xFF2D6A4F),
+        style: TextStyle(
+          color: extra.primaryColor,
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
       ),
       hintText: hint,
-      hintStyle: const TextStyle(color: _textHint),
+      hintStyle: TextStyle(color: extra.secondaryTextColor),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: cs.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _cardBorder, width: 1.5),
+        borderSide: BorderSide(color: cs.outline, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _primaryColor, width: 2),
+        borderSide: BorderSide(color: cs.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _errorColor, width: 2),
+        borderSide: BorderSide(color: cs.error, width: 2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: _errorColor, width: 2),
+        borderSide: BorderSide(color: cs.error, width: 2),
       ),
       suffixIcon: suffixIcon,
     );
@@ -76,6 +70,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final extra = context.extra;
+    final textPrimary = extra.primaryTextColor!;
+    final secondaryText = extra.secondaryTextColor!;
+    final primaryColor = extra.primaryColor!;
+    final borderColor = cs.outline;
+    final avatarBg = cs.primaryContainer;
+
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
@@ -84,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: _primaryColor,
+              backgroundColor: primaryColor,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -94,7 +96,6 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.lightBackground,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -107,8 +108,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Container(
                     width: 88,
                     height: 88,
-                    decoration: const BoxDecoration(
-                      color: _peachBg,
+                    decoration: BoxDecoration(
+                      color: avatarBg,
                       shape: BoxShape.circle,
                     ),
                     child: Lottie.asset(
@@ -119,18 +120,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 28),
-                const Text(
+                Text(
                   'Welcome back',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w600,
-                    color: _textPrimary,
+                    color: textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Luna missed you 🌿',
-                  style: TextStyle(fontSize: 14, color: _secondaryText),
+                  style: TextStyle(fontSize: 14, color: secondaryText),
                 ),
                 const SizedBox(height: 32),
                 // Email field
@@ -138,36 +139,35 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
+                  style: TextStyle(color: textPrimary),
                   decoration: _fieldDecoration(
+                    context: context,
                     label: 'Email',
                     hint: 'your@email.com',
                   ),
                 ),
                 const SizedBox(height: 16),
                 // Password field
-                BlocBuilder<AuthCubit, AuthState>(
-                  builder: (context, state) {
-                    return TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      decoration: _fieldDecoration(
-                        label: 'Password',
-                        hint: '••••••••',
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: _secondaryText,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                        ),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  style: TextStyle(color: textPrimary),
+                  decoration: _fieldDecoration(
+                    context: context,
+                    label: 'Password',
+                    hint: '••••••••',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: secondaryText,
                       ),
-                    );
-                  },
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 // Forgot password
@@ -180,9 +180,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Forgot password?',
-                      style: TextStyle(color: _primaryColor, fontSize: 12),
+                      style: TextStyle(color: primaryColor, fontSize: 12),
                     ),
                   ),
                 ),
@@ -202,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   password: _passwordController.text,
                                 ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _primaryColor,
+                          backgroundColor: primaryColor,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -231,19 +231,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Divider
                 Row(
                   children: [
-                    Expanded(
-                      child: Divider(color: _cardBorder, thickness: 1),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
+                    Expanded(child: Divider(color: borderColor, thickness: 1)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         'or',
-                        style: TextStyle(color: _secondaryText, fontSize: 12),
+                        style: TextStyle(color: secondaryText, fontSize: 12),
                       ),
                     ),
-                    Expanded(
-                      child: Divider(color: _cardBorder, thickness: 1),
-                    ),
+                    Expanded(child: Divider(color: borderColor, thickness: 1)),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -252,21 +248,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 52,
                   child: OutlinedButton.icon(
-                    onPressed: () => context.read<AuthCubit>().signInWithGoogle(),
+                    onPressed: () =>
+                        context.read<AuthCubit>().signInWithGoogle(),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: _cardBorder, width: 1.5),
+                      side: BorderSide(color: borderColor, width: 1.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      foregroundColor: _textPrimary,
+                      foregroundColor: textPrimary,
                     ),
                     icon: const _GoogleIcon(),
                     label: const Text(
                       'Continue with Google',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                   ),
                 ),
@@ -276,19 +270,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: GestureDetector(
                     onTap: () => context.go(AppRoutes.registerScreen),
                     child: RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         children: [
                           TextSpan(
                             text: "Don't have an account? ",
-                            style: TextStyle(
-                              color: _secondaryText,
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: secondaryText, fontSize: 13),
                           ),
                           TextSpan(
                             text: 'Start growing',
                             style: TextStyle(
-                              color: _primaryColor,
+                              color: primaryColor,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
