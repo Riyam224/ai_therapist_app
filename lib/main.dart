@@ -16,6 +16,7 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox<String>(MoodLocalDatasource.boxName);
   await Hive.openBox<String>(SavedQuotesLocalDatasource.boxName);
+  await Hive.openBox<bool>('settings');
   // load .env first
   await dotenv.load(fileName: '.env');
   await Supabase.initialize(

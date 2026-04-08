@@ -67,7 +67,7 @@ void setupInjection() {
 
   // ── Mood Repository ──
   sl.registerLazySingleton<MoodRepository>(
-    () => MoodRepositoryImpl(sl(), sl()),
+    () => MoodRepositoryImpl(sl(), sl(), sl()),
   );
 
   // ── Saved Quotes Repository ──
@@ -94,7 +94,7 @@ void setupInjection() {
   );
 
   sl.registerLazySingleton<StreakRepository>(
-    () => StreakRepository(sl<DioHelper>().dio!),
+    () => StreakRepository(sl<DioHelper>().dio!, sl()),
   );
 
   sl.registerFactory<PlantCubit>(

@@ -1,12 +1,20 @@
 import 'package:dio/dio.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/networking/api_endpoints.dart';
 
 class StreakRepository {
   final Dio dio;
-  StreakRepository(this.dio);
+  final SupabaseClient supabase;
+
+  StreakRepository(this.dio, this.supabase);
 
   Future<int> calculateStreak() async {
     try {
-      final response = await dio.get('/api/journal/entries/');
+      final userId = supabase.auth.currentUser?.id ?? '';
+      final response = await dio.get(
+        ApiEndpoints.history,
+        queryParameters: {'user_id': userId},
+      );
 
       final List entries = response.data['results'] ?? response.data ?? [];
 

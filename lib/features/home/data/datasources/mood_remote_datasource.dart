@@ -13,8 +13,11 @@ class MoodRemoteDatasource {
     return MoodEntryModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<List<MoodEntryModel>> getHistory() async {
-    final response = await _dio.get(ApiEndpoints.history);
+  Future<List<MoodEntryModel>> getHistory({required String userId}) async {
+    final response = await _dio.get(
+      ApiEndpoints.history,
+      queryParameters: {'user_id': userId},
+    );
     final list = response.data as List<dynamic>;
     return list
         .map((e) => MoodEntryModel.fromJson(e as Map<String, dynamic>))

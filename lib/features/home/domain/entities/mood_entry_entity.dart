@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class MoodEntryEntity extends Equatable {
   final int id;
+  final String userId;
   final String emoji;
   final String thoughts;
   final String aiResponse;
@@ -9,6 +10,7 @@ class MoodEntryEntity extends Equatable {
 
   const MoodEntryEntity({
     required this.id,
+    required this.userId,
     required this.emoji,
     required this.thoughts,
     required this.aiResponse,
@@ -16,5 +18,5 @@ class MoodEntryEntity extends Equatable {
   });
 
   @override
-  List<Object> get props => [id, emoji, thoughts, aiResponse, createdAt];
+  List<Object> get props => [id, userId, emoji, thoughts, aiResponse, createdAt];
 }

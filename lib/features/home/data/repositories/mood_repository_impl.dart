@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/mood_entry_entity.dart';
 import '../../domain/repositories/mood_repository.dart';
@@ -11,9 +12,13 @@ import '../models/mood_entry_model.dart';
 class MoodRepositoryImpl implements MoodRepository {
   final MoodRemoteDatasource _remote;
   final MoodLocalDatasource _local;
+  final SupabaseClient _supabase;
   final Logger _logger = Logger();
 
-  MoodRepositoryImpl(this._remote, this._local);
+  MoodRepositoryImpl(this._remote, this._local, this._supabase);
+
+  String get _currentUserId =>
+      _supabase.auth.currentUser?.id ?? '';
 
   @override
   Future<Either<Failure, MoodEntryEntity>> generateResponse({
@@ -23,15 +28,15 @@ class MoodRepositoryImpl implements MoodRepository {
     try {
       _logger.i('Generating response for emoji: $emoji');
 
-      final model = await _remote.generateResponse({
+      final MoodEntryModel model = await _remote.generateResponse({
+        'user_id': _currentUserId,
         'emoji': emoji,
         'thoughts': thoughts,
       });
 
-      // Persist new entry to cache so history is available offline
       await _local.addEntry(model);
 
-      _logger.i('Response generated and cached: ${model.id}');
+      _logger.i('Response generated and cached: id=${model.id}');
       return Right(model.toEntity());
     } on DioException catch (e) {
       _logger.e('DioException: ${e.message}');
@@ -49,7 +54,8 @@ class MoodRepositoryImpl implements MoodRepository {
   }) async {
     try {
       final localEntry = MoodEntryModel(
-        id: -DateTime.now().millisecondsSinceEpoch,
+        id: 0,
+        userId: '',
         emoji: emoji,
         thoughts: thoughts,
         aiResponse: '',
@@ -57,7 +63,7 @@ class MoodRepositoryImpl implements MoodRepository {
       );
 
       await _local.addEntry(localEntry);
-      _logger.i('Local entry cached: ${localEntry.id}');
+      _logger.i('Local entry cached');
       return Right(localEntry.toEntity());
     } catch (e) {
       _logger.e('Failed to cache local entry: $e');
@@ -70,19 +76,17 @@ class MoodRepositoryImpl implements MoodRepository {
     try {
       _logger.i('Fetching mood history from API...');
 
-      final models = await _remote.getHistory();
-      final cached = _local.getCachedHistory();
-      final localOnly = cached.where((e) => e.id < 0).toList();
-      final merged = [...localOnly, ...models];
+      final List<MoodEntryModel> models =
+          await _remote.getHistory(userId: _currentUserId);
 
-      // Refresh cache with latest server data and keep local-only entries
-      await _local.cacheHistory(merged);
+      await _local.cacheHistory(models);
 
       _logger.i('Fetched ${models.length} entries from API');
-      return Right(merged.map((m) => m.toEntity()).toList());
+      return Right(models.map((m) => m.toEntity()).toList());
     } on DioException catch (e) {
       _logger.w('API failed, falling back to cache: ${e.message}');
-      return _fallbackToCache(ServerFailure(e.message ?? 'Server error occurred'));
+      return _fallbackToCache(
+          ServerFailure(e.message ?? 'Server error occurred'));
     } catch (e) {
       _logger.w('Unexpected error, falling back to cache: $e');
       return _fallbackToCache(NetworkFailure('Unexpected error: $e'));
@@ -93,10 +97,10 @@ class MoodRepositoryImpl implements MoodRepository {
   Future<Either<Failure, void>> deleteEntry(int id) async {
     try {
       await _local.deleteEntry(id);
-      _logger.i('Entry $id deleted from cache');
+      _logger.i('Entry deleted from cache: id=$id');
       return const Right(null);
     } catch (e) {
-      _logger.e('Failed to delete entry $id: $e');
+      _logger.e('Failed to delete entry: $e');
       return Left(NetworkFailure('Failed to delete entry'));
     }
   }
@@ -114,9 +118,12 @@ class MoodRepositoryImpl implements MoodRepository {
   }
 
   Either<Failure, List<MoodEntryEntity>> _fallbackToCache(Failure failure) {
-    final cached = _local.getCachedHistory();
+    final cached = _local
+        .getCachedHistory()
+        .where((e) => e.userId == _currentUserId)
+        .toList();
     if (cached.isNotEmpty) {
-      _logger.i('Returning ${cached.length} cached entries');
+      _logger.i('Returning ${cached.length} cached entries for current user');
       return Right(cached.map((m) => m.toEntity()).toList());
     }
     return Left(failure);

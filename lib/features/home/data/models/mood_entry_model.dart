@@ -6,6 +6,10 @@ part 'mood_entry_model.g.dart';
 @JsonSerializable()
 class MoodEntryModel {
   final int id;
+
+  @JsonKey(name: 'user_id', defaultValue: '')
+  final String userId;
+
   final String emoji;
   final String thoughts;
 
@@ -17,6 +21,7 @@ class MoodEntryModel {
 
   const MoodEntryModel({
     required this.id,
+    required this.userId,
     required this.emoji,
     required this.thoughts,
     required this.aiResponse,
@@ -28,12 +33,12 @@ class MoodEntryModel {
 
   Map<String, dynamic> toJson() => _$MoodEntryModelToJson(this);
 
-  // Convert Model → Entity
   MoodEntryEntity toEntity() => MoodEntryEntity(
-    id: id,
-    emoji: emoji,
-    thoughts: thoughts,
-    aiResponse: aiResponse,
-    createdAt: createdAt,
-  );
+        id: id,
+        userId: userId,
+        emoji: emoji,
+        thoughts: thoughts,
+        aiResponse: aiResponse,
+        createdAt: createdAt,
+      );
 }
