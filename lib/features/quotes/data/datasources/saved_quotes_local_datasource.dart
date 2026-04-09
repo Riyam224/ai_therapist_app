@@ -4,12 +4,14 @@ import '../models/saved_quote_model.dart';
 
 class SavedQuotesLocalDatasource {
   static const String boxName = 'saved_quotes';
-  static const String _quotesKey = 'quotes';
 
   Box<String> get _box => Hive.box<String>(boxName);
 
-  List<SavedQuoteModel> getQuotes() {
-    final jsonStr = _box.get(_quotesKey);
+  /// Per-user Hive key so quotes never bleed between accounts on the same device
+  String _key(String userId) => 'quotes_$userId';
+
+  List<SavedQuoteModel> getQuotes({required String userId}) {
+    final jsonStr = _box.get(_key(userId));
     if (jsonStr == null) return [];
     final list = jsonDecode(jsonStr) as List<dynamic>;
     return list
@@ -17,20 +19,20 @@ class SavedQuotesLocalDatasource {
         .toList();
   }
 
-  Future<void> saveQuote(SavedQuoteModel quote) async {
-    final existing = getQuotes();
+  Future<void> saveQuote(SavedQuoteModel quote, {required String userId}) async {
+    final existing = getQuotes(userId: userId);
     final updated = [
       quote,
       ...existing.where((q) => q.text != quote.text),
     ];
     final encoded = jsonEncode(updated.map((q) => q.toJson()).toList());
-    await _box.put(_quotesKey, encoded);
+    await _box.put(_key(userId), encoded);
   }
 
-  Future<void> deleteQuote(String id) async {
-    final existing = getQuotes();
+  Future<void> deleteQuote(String id, {required String userId}) async {
+    final existing = getQuotes(userId: userId);
     final updated = existing.where((q) => q.id != id).toList();
     final encoded = jsonEncode(updated.map((q) => q.toJson()).toList());
-    await _box.put(_quotesKey, encoded);
+    await _box.put(_key(userId), encoded);
   }
 }
