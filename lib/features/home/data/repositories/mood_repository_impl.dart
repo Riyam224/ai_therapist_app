@@ -55,7 +55,7 @@ class MoodRepositoryImpl implements MoodRepository {
     try {
       final localEntry = MoodEntryModel(
         id: 0,
-        userId: '',
+        userId: _currentUserId,
         emoji: emoji,
         thoughts: thoughts,
         aiResponse: '',
@@ -79,10 +79,15 @@ class MoodRepositoryImpl implements MoodRepository {
       final List<MoodEntryModel> models =
           await _remote.getHistory(userId: _currentUserId);
 
-      await _local.cacheHistory(models);
+      // Guard: only keep entries that belong to the current user
+      final userModels = models
+          .where((m) => m.userId == _currentUserId)
+          .toList();
 
-      _logger.i('Fetched ${models.length} entries from API');
-      return Right(models.map((m) => m.toEntity()).toList());
+      await _local.cacheHistory(userModels);
+
+      _logger.i('Fetched ${userModels.length} entries for current user');
+      return Right(userModels.map((m) => m.toEntity()).toList());
     } on DioException catch (e) {
       _logger.w('API failed, falling back to cache: ${e.message}');
       return _fallbackToCache(
