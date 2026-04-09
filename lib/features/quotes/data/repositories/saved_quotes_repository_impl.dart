@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:logger/logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/saved_quote_entity.dart';
 import '../../domain/repositories/saved_quotes_repository.dart';
@@ -8,14 +9,17 @@ import '../models/saved_quote_model.dart';
 
 class SavedQuotesRepositoryImpl implements SavedQuotesRepository {
   final SavedQuotesLocalDatasource _local;
+  final SupabaseClient _supabase;
   final Logger _logger = Logger();
 
-  SavedQuotesRepositoryImpl(this._local);
+  SavedQuotesRepositoryImpl(this._local, this._supabase);
+
+  String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
 
   @override
   Future<Either<Failure, List<SavedQuoteEntity>>> getQuotes() async {
     try {
-      final quotes = _local.getQuotes();
+      final quotes = _local.getQuotes(userId: _currentUserId);
       return Right(quotes.map((q) => q.toEntity()).toList());
     } catch (e) {
       _logger.e('Failed to load quotes: $e');
@@ -31,7 +35,7 @@ class SavedQuotesRepositoryImpl implements SavedQuotesRepository {
         text: text,
         savedAt: DateTime.now(),
       );
-      await _local.saveQuote(quote);
+      await _local.saveQuote(quote, userId: _currentUserId);
       return Right(quote.toEntity());
     } catch (e) {
       _logger.e('Failed to save quote: $e');
@@ -42,7 +46,7 @@ class SavedQuotesRepositoryImpl implements SavedQuotesRepository {
   @override
   Future<Either<Failure, void>> deleteQuote(String id) async {
     try {
-      await _local.deleteQuote(id);
+      await _local.deleteQuote(id, userId: _currentUserId);
       return const Right(null);
     } catch (e) {
       _logger.e('Failed to delete quote: $e');
