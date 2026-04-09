@@ -10,6 +10,10 @@ import '../../features/auth/domain/usecases/login_usecase.dart';
 import '../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../features/auth/domain/usecases/register_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
+import '../../features/chat/data/datasources/chat_remote_datasource.dart';
+import '../../features/chat/data/repositories/chat_repository_impl.dart';
+import '../../features/chat/domain/repositories/chat_repository.dart';
+import '../../features/chat/presentation/cubit/chat_cubit.dart';
 import '../../features/home/data/datasources/mood_local_datasource.dart';
 import '../../features/home/data/datasources/mood_remote_datasource.dart';
 import '../../features/home/data/repositories/mood_repository_impl.dart';
@@ -99,5 +103,26 @@ void setupInjection() {
 
   sl.registerFactory<PlantCubit>(
     () => PlantCubit(sl<StreakRepository>()), // no SupabaseClient
+  );
+
+  // in your injection_container.dart or service_locator.dart
+
+// DataSource
+  sl.registerLazySingleton<ChatRemoteDataSource>(
+    () => ChatRemoteDataSourceImpl(dio: sl<DioHelper>().dio!),
+  );
+
+// Repository
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(remoteDataSource: sl()),
+  );
+
+// Cubit — factory so each user gets a FRESH instance
+// userId is passed at runtime when navigating to chat screen
+  sl.registerFactory<ChatCubit>(
+    () => ChatCubit(
+      repository: sl(),
+      userId: '', // overridden at screen level
+    ),
   );
 }
