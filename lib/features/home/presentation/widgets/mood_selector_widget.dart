@@ -24,6 +24,7 @@ class MoodSelectorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final extra = context.extra;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,6 +38,10 @@ class MoodSelectorWidget extends StatelessWidget {
                 (moodColors != null && index < moodColors!.length)
                     ? moodColors![index]
                     : extra.primaryColor!;
+            // In dark mode use the theme primary (purple) for border/glow
+            // so the selection highlight matches the dark palette
+            final highlightColor =
+                isDark ? extra.primaryColor! : moodColor;
 
             return Expanded(
               child: Padding(
@@ -53,21 +58,21 @@ class MoodSelectorWidget extends StatelessWidget {
                     height: AppSizes.emojiButtonSize * 1.4,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? moodColor.withValues(alpha: 0.15)
+                          ? highlightColor.withValues(alpha: 0.15)
                           : extra.cardBackgroundColor,
                       borderRadius:
                           BorderRadius.circular(AppSizes.borderRadiusMd),
                       border: Border.all(
                         color: isSelected
-                            ? moodColor
+                            ? highlightColor
                             : (extra.borderColor ?? Colors.transparent),
                         width: isSelected ? 2 : 1,
                       ),
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: moodColor.withValues(alpha: 0.25),
-                                blurRadius: 8,
+                                color: highlightColor.withValues(alpha: 0.3),
+                                blurRadius: 10,
                                 offset: const Offset(0, 3),
                               ),
                             ]
