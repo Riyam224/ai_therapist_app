@@ -59,7 +59,11 @@ class SavedQuotesScreen extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('📌', style: TextStyle(fontSize: 40)),
+                            Icon(
+                              Icons.bookmark_rounded,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                             SizedBox(height: AppSpacing.spaceSm),
                             Text(
                               'No saved quotes yet',
@@ -157,9 +161,25 @@ class SavedQuotesScreen extends StatelessWidget {
                                   width: 1.2,
                                 ),
                               ),
-                              child: Text(
-                                '"${quote.text}"',
-                                style: ThemeTextStyles.bodyMedium(context),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '"${quote.text}"',
+                                      style: ThemeTextStyles.bodyMedium(context),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.bookmark_rounded,
+                                    size: 18,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withValues(alpha: 0.5),
+                                  ),
+                                ],
                               ),
                             ),
                           );
