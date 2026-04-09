@@ -56,6 +56,7 @@ void setupInjection() {
         registerUseCase: sl(),
         logoutUseCase: sl(),
         authRepository: sl(),
+        moodCubit: sl(),
       ));
 
   // ── Mood DataSources ──

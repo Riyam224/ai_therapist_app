@@ -1,12 +1,12 @@
-# LunaSpace — AI Therapist & Mood Journal
+# LunaTree — AI Therapist & Mood Journal
 
 > Your pocket therapist. Talk to Luna, track your moods, and grow together.
 
 ---
 
-## What is LunaSpace?
+## What is LunaTree?
 
-LunaSpace is a Flutter mobile app that acts as an AI-powered mood journal and therapist companion. Users share how they feel through emoji and free-text thoughts, and Luna (powered by GROQ's LLM) responds with empathetic, personalized reflections. The app tracks mood history, visualizes emotional patterns, and gamifies consistency through a plant-growth streak system.
+LunaTree is a Flutter mobile app that acts as an AI-powered mood journal and therapist companion. Users share how they feel through emoji and free-text thoughts, and Luna (powered by GROQ's LLM) responds with empathetic, personalized reflections. The app tracks mood history, visualizes emotional patterns, and gamifies consistency through a plant-growth streak system.
 
 ---
 

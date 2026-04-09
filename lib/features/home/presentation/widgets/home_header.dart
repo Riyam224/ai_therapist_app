@@ -38,7 +38,7 @@ class HomeHeader extends StatelessWidget {
         ),
 
         // App Title
-        Text('LunaSpace', style: ThemeTextStyles.headlineSmall(context)),
+        Text('LunaTree', style: ThemeTextStyles.headlineSmall(context)),
 
         // Theme Toggle Button
         BlocBuilder<ThemeCubit, ThemeMode>(

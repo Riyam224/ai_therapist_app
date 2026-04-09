@@ -8,6 +8,9 @@ import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../home/domain/entities/mood_entry_entity.dart';
+import '../../../home/presentation/cubit/mood_cubit.dart';
+import '../../../home/presentation/cubit/mood_state.dart';
 import '../../../quotes/presentation/cubit/saved_quotes_cubit.dart';
 import '../../../quotes/presentation/cubit/saved_quotes_state.dart';
 import '../../../../core/routing/app_routes.dart';
@@ -34,6 +37,36 @@ class ProfileScreen extends StatelessWidget {
       return 'Joined $month · MindEase member';
     }
     return 'MindEase member';
+  }
+
+  static int _thisWeekCount(List<MoodEntryEntity> entries) {
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    final start = DateTime(weekStart.year, weekStart.month, weekStart.day);
+    return entries.where((e) => !e.createdAt.isBefore(start)).length;
+  }
+
+  static int _calculateStreak(List<MoodEntryEntity> entries) {
+    if (entries.isEmpty) return 0;
+    final dates = entries
+        .map((e) => DateTime(e.createdAt.year, e.createdAt.month, e.createdAt.day))
+        .toSet()
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+    int streak = 0;
+    DateTime day = DateTime.now();
+    day = DateTime(day.year, day.month, day.day);
+    for (final date in dates) {
+      if (DateUtils.isSameDay(date, day)) {
+        streak++;
+        day = day.subtract(const Duration(days: 1));
+      } else if (date.isAfter(day)) {
+        continue;
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
 
   @override
@@ -94,11 +127,18 @@ class ProfileScreen extends StatelessWidget {
             AppSpacing.horizontalPaddingLg,
             AppSpacing.sectionSpacingMd,
           ),
-          sliver: const SliverToBoxAdapter(
-            child: ProfileStatsWidget(
-              totalEntries: 27,
-              thisWeek: 5,
-              dayStreak: 3,
+          sliver: SliverToBoxAdapter(
+            child: BlocBuilder<MoodCubit, MoodState>(
+              builder: (context, state) {
+                final entries = state is MoodHistorySuccess
+                    ? state.entries
+                    : <MoodEntryEntity>[];
+                return ProfileStatsWidget(
+                  totalEntries: entries.length,
+                  thisWeek: _thisWeekCount(entries),
+                  dayStreak: _calculateStreak(entries),
+                );
+              },
             ),
           ),
         ),

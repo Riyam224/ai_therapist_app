@@ -1,8 +1,8 @@
-# CLAUDE.md — LunaSpace Flutter Project
+# CLAUDE.md — LunaTree Flutter Project
 
 ## Project Overview
 
-**App Name:** LunaSpace
+**App Name:** LunaTree
 **Tagline:** Your pocket therapist
 **Type:** AI Therapist Mood Journal — Flutter mobile app
 **Backend:** Django REST Framework deployed on Railway

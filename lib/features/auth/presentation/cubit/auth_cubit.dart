@@ -6,6 +6,7 @@ import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../data/models/user_model.dart';
+import '../../../home/presentation/cubit/mood_cubit.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -13,6 +14,7 @@ class AuthCubit extends Cubit<AuthState> {
   final RegisterUseCase _registerUseCase;
   final LogoutUseCase _logoutUseCase;
   final AuthRepository _authRepository;
+  final MoodCubit _moodCubit;
 
   StreamSubscription<AuthState>? _authSub;
 
@@ -21,10 +23,12 @@ class AuthCubit extends Cubit<AuthState> {
     required RegisterUseCase registerUseCase,
     required LogoutUseCase logoutUseCase,
     required AuthRepository authRepository,
+    required MoodCubit moodCubit,
   })  : _loginUseCase = loginUseCase,
         _registerUseCase = registerUseCase,
         _logoutUseCase = logoutUseCase,
         _authRepository = authRepository,
+        _moodCubit = moodCubit,
         super(AuthInitial()) {
     _listenToAuthChanges();
   }
@@ -43,7 +47,14 @@ class AuthCubit extends Cubit<AuthState> {
           return AuthUnauthenticated();
         })
         .listen((authState) {
-          if (!isClosed && state is! AuthLoading) emit(authState);
+          if (isClosed || state is AuthLoading) return;
+          emit(authState);
+          if (authState is AuthAuthenticated) {
+            _moodCubit.clearEntries();
+            _moodCubit.getHistory();
+          } else if (authState is AuthUnauthenticated) {
+            _moodCubit.clearEntries();
+          }
         });
   }
 
@@ -87,6 +98,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
+    _moodCubit.clearEntries();
     final result = await _logoutUseCase();
     if (isClosed) return;
     result.fold(

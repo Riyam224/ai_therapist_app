@@ -14,9 +14,15 @@ class MoodCubit extends Cubit<MoodState> {
 
   MoodCubit(this._repository) : super(const MoodInitial());
 
-  // 🔥 ADD THIS METHOD
   Future<void> loadEntries() async {
     await getHistory();
+  }
+
+  /// Clears in-memory entries and resets state to initial.
+  /// Call this when the active user changes so the new user starts fresh.
+  void clearEntries() {
+    _cachedEntries = [];
+    emit(const MoodInitial());
   }
 
   // Generate AI response and prepend to cached history

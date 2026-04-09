@@ -45,11 +45,11 @@ void main() async {
     }
   });
 
-  runApp(const LunaSpace());
+  runApp(const LunaTree());
 }
 
-class LunaSpace extends StatelessWidget {
-  const LunaSpace({super.key});
+class LunaTree extends StatelessWidget {
+  const LunaTree({super.key});
 
   @override
   Widget build(BuildContext context) {

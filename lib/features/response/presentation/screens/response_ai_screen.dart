@@ -56,9 +56,9 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           context.read<MoodCubit>().generateResponse(
-            emoji: widget.emojiUnicode!,
-            thoughts: widget.thoughts,
-          );
+                emoji: widget.emojiUnicode!,
+                thoughts: widget.thoughts,
+              );
         }
       });
     }
@@ -137,14 +137,15 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
                 },
                 child: BlocBuilder<MoodCubit, MoodState>(
                   builder: (context, state) {
-                  if (state is MoodLoading) {
-                    return const Center(child: LunaTypingIndicator());
-                  }
+                    if (state is MoodLoading) {
+                      return const Center(child: LunaTypingIndicator());
+                    }
 
                     if (state is MoodError) {
                       return Center(
                         child: Padding(
-                          padding: EdgeInsets.all(AppSpacing.horizontalPaddingLg),
+                          padding:
+                              EdgeInsets.all(AppSpacing.horizontalPaddingLg),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -165,9 +166,9 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
                                   if (widget.emojiUnicode != null) {
                                     _didResponseHaptic = false;
                                     context.read<MoodCubit>().generateResponse(
-                                      emoji: widget.emojiUnicode!,
-                                      thoughts: widget.thoughts,
-                                    );
+                                          emoji: widget.emojiUnicode!,
+                                          thoughts: widget.thoughts,
+                                        );
                                   }
                                 },
                                 child: const Text('Try again'),
@@ -182,8 +183,9 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
                     final generated = state is MoodHistorySuccess
                         ? state.justGenerated
                         : null;
-                  final aiResponse = generated?.aiResponse ?? '';
-                  final displayThoughts = generated?.thoughts ?? widget.thoughts;
+                    final aiResponse = generated?.aiResponse ?? '';
+                    final displayThoughts =
+                        generated?.thoughts ?? widget.thoughts;
 
                     return SingleChildScrollView(
                       padding: EdgeInsets.symmetric(
@@ -197,12 +199,13 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
                           const LunaInfoWidget(),
                           SizedBox(height: AppSpacing.sectionSpacingMd),
                           UserMoodCardWidget(
-                            emoji: widget.emojiImagePath ?? AppAssets.emojiOverwhelmed,
+                            emoji: widget.emojiImagePath ??
+                                AppAssets.emojiOverwhelmed,
                             thoughts: displayThoughts,
                             isEmojiImage: true,
                           ),
                           SizedBox(height: AppSpacing.spaceLg),
-                        if (aiResponse.isNotEmpty) ...[
+                          if (aiResponse.isNotEmpty) ...[
                             AiResponseCardWidget(
                               response: aiResponse,
                               onBookmark: () {
@@ -216,88 +219,86 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
                                 );
                               },
                             ),
-                          SizedBox(height: AppSpacing.spaceLg),
-                          const MoodTagsRowWidget(
-                            tags: ['Expressing', 'Reflecting', 'Growing'],
-                          ),
-                          SizedBox(height: AppSpacing.sectionSpacingMd),
-                          ActionButtonsWidget(
-                            saveLabel: 'Done',
-                            talkAgainLabel: 'Keep chatting',
-                            onSave: () {
-                              if (context.canPop()) {
-                                context.pop();
-                              } else {
-                                context.go(AppRoutes.home);
-                              }
-                            },
-                            onTalkAgain: aiResponse.isNotEmpty
-                                ? () {
-                                    final userId = Supabase
-                                            .instance.client.auth.currentUser
-                                            ?.id ??
-                                        '';
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => BlocProvider(
-                                          create: (_) => ChatCubit(
-                                            repository: sl<ChatRepository>(),
-                                            userId: userId,
-                                            initialMessages: [
-                                              ChatMessage(
-                                                role: 'user',
-                                                content: displayThoughts,
-                                              ),
-                                              ChatMessage(
-                                                role: 'assistant',
-                                                content: aiResponse,
-                                              ),
-                                            ],
-                                          ),
-                                          child: ChatScreen(
-                                            emoji: widget.emojiUnicode ?? '😊',
+                            SizedBox(height: AppSpacing.spaceLg),
+                            const MoodTagsRowWidget(
+                              tags: ['Expressing', 'Reflecting', 'Growing'],
+                            ),
+                            SizedBox(height: AppSpacing.sectionSpacingMd),
+                            ActionButtonsWidget(
+                              saveLabel: 'Done',
+                              talkAgainLabel: 'Keep chatting',
+                              onSave: () {
+                                if (context.canPop()) {
+                                  context.pop();
+                                } else {
+                                  context.go(AppRoutes.home);
+                                }
+                              },
+                              onTalkAgain: aiResponse.isNotEmpty
+                                  ? () {
+                                      final userId = Supabase.instance.client
+                                              .auth.currentUser?.id ??
+                                          '';
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => BlocProvider(
+                                            create: (_) => ChatCubit(
+                                              repository: sl<ChatRepository>(),
+                                              userId: userId,
+                                              initialMessages: [
+                                                ChatMessage(
+                                                  role: 'user',
+                                                  content: displayThoughts,
+                                                ),
+                                                ChatMessage(
+                                                  role: 'assistant',
+                                                  content: aiResponse,
+                                                ),
+                                              ],
+                                            ),
+                                            child: ChatScreen(
+                                              emoji:
+                                                  widget.emojiUnicode ?? '😊',
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  }
-                                : null,
-                          ),
-                          SizedBox(height: AppSpacing.spaceMd),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: () => _shareResponse(aiResponse),
-                              style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: AppSpacing.spaceLg,
+                                      );
+                                    }
+                                  : null,
+                            ),
+                            SizedBox(height: AppSpacing.spaceMd),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: () => _shareResponse(aiResponse),
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: AppSpacing.spaceLg,
+                                  ),
+                                  side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    width: 1.5,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16.r),
+                                  ),
                                 ),
-                                side: BorderSide(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary,
-                                  width: 1.5,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16.r),
-                                ),
-                              ),
-                              child: Text(
-                                'Share',
-                                style:
-                                    ThemeTextStyles.labelMedium(context).copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary,
+                                child: Text(
+                                  'Share',
+                                  style: ThemeTextStyles.labelMedium(context)
+                                      .copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: AppSpacing.spaceLg),
-                          const AfterFeelingSelectorWidget(),
-                          SizedBox(height: AppSpacing.sectionSpacingMd),
-                        ],
+                            SizedBox(height: AppSpacing.spaceLg),
+                            const AfterFeelingSelectorWidget(),
+                            SizedBox(height: AppSpacing.sectionSpacingMd),
+                          ],
                         ],
                       ),
                     );
@@ -318,9 +319,8 @@ extension _ShareHelper on _ResponseAiScreenState {
 
     // Capture render box and build share card before any awaits
     final box = context.findRenderObject() as RenderBox?;
-    final origin = box != null
-        ? (box.localToGlobal(Offset.zero) & box.size)
-        : null;
+    final origin =
+        box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
     final shareCard = _buildShareCard(context, aiResponse);
 
     final bytes = await _screenshotController.captureFromWidget(
@@ -382,7 +382,7 @@ extension _ShareHelper on _ResponseAiScreenState {
             ),
             const SizedBox(height: 40),
             Text(
-              'MindEase · LunaSpace',
+              'MindEase · LunaTree',
               style: ThemeTextStyles.bodySmall(context).copyWith(
                 color: theme.colorScheme.primary.withValues(alpha: 0.7),
               ),

@@ -1,0 +1,12 @@
+// lib/features/chat/domain/repositories/chat_repository.dart
+
+import '../entities/chat_message.dart';
+
+abstract class ChatRepository {
+  Future<String> sendMessage({
+    required String userId,
+    required String emoji,
+    required String thoughts,
+    required List<ChatMessage> history,
+  });
+}
