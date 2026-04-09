@@ -316,19 +316,27 @@ extension _ShareHelper on _ResponseAiScreenState {
   Future<void> _shareResponse(String aiResponse) async {
     if (aiResponse.trim().isEmpty) return;
 
+    // Capture render box and build share card before any awaits
+    final box = context.findRenderObject() as RenderBox?;
+    final origin = box != null
+        ? (box.localToGlobal(Offset.zero) & box.size)
+        : null;
+    final shareCard = _buildShareCard(context, aiResponse);
+
     final bytes = await _screenshotController.captureFromWidget(
-      _buildShareCard(context, aiResponse),
+      shareCard,
       pixelRatio: 3.0,
     );
+
+    if (!mounted) return;
 
     final file = File(
       '${Directory.systemTemp.path}/luna_share_${DateTime.now().millisecondsSinceEpoch}.png',
     );
     await file.writeAsBytes(bytes);
-    final box = context.findRenderObject() as RenderBox?;
-    final origin = box != null
-        ? (box.localToGlobal(Offset.zero) & box.size)
-        : null;
+
+    if (!mounted) return;
+
     await Share.shareXFiles(
       [XFile(file.path)],
       sharePositionOrigin: origin,
