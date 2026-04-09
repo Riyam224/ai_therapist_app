@@ -6,15 +6,21 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/app_assets.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/navigation/app_bottom_nav_bar.dart';
+import '../../../../core/injection/injection.dart';
 import '../../../home/presentation/cubit/mood_cubit.dart';
 import '../../../home/presentation/cubit/mood_state.dart';
 import '../../../quotes/presentation/cubit/saved_quotes_cubit.dart';
+import '../../../chat/domain/entities/chat_message.dart';
+import '../../../chat/domain/repositories/chat_repository.dart';
+import '../../../chat/presentation/cubit/chat_cubit.dart';
+import '../../../chat/presentation/screens/chat_screen.dart';
 import '../widgets/luna_avatar_widget.dart';
 import '../widgets/luna_info_widget.dart';
 import '../widgets/user_mood_card_widget.dart';
@@ -216,8 +222,47 @@ class _ResponseAiScreenState extends State<ResponseAiScreen> {
                           ),
                           SizedBox(height: AppSpacing.sectionSpacingMd),
                           ActionButtonsWidget(
-                            onSave: () => context.go(AppRoutes.journal),
-                            onTalkAgain: () => context.go(AppRoutes.home),
+                            saveLabel: 'Done',
+                            talkAgainLabel: 'Keep chatting',
+                            onSave: () {
+                              if (context.canPop()) {
+                                context.pop();
+                              } else {
+                                context.go(AppRoutes.home);
+                              }
+                            },
+                            onTalkAgain: aiResponse.isNotEmpty
+                                ? () {
+                                    final userId = Supabase
+                                            .instance.client.auth.currentUser
+                                            ?.id ??
+                                        '';
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => BlocProvider(
+                                          create: (_) => ChatCubit(
+                                            repository: sl<ChatRepository>(),
+                                            userId: userId,
+                                            initialMessages: [
+                                              ChatMessage(
+                                                role: 'user',
+                                                content: displayThoughts,
+                                              ),
+                                              ChatMessage(
+                                                role: 'assistant',
+                                                content: aiResponse,
+                                              ),
+                                            ],
+                                          ),
+                                          child: ChatScreen(
+                                            emoji: widget.emojiUnicode ?? '😊',
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                : null,
                           ),
                           SizedBox(height: AppSpacing.spaceMd),
                           SizedBox(

@@ -8,11 +8,15 @@ import '../../../../core/constants/app_spacing.dart';
 class ActionButtonsWidget extends StatelessWidget {
   final VoidCallback? onSave;
   final VoidCallback? onTalkAgain;
+  final String saveLabel;
+  final String talkAgainLabel;
 
   const ActionButtonsWidget({
     super.key,
     this.onSave,
     this.onTalkAgain,
+    this.saveLabel = 'Save to journal',
+    this.talkAgainLabel = 'Talk again',
   });
 
   @override
@@ -33,7 +37,7 @@ class ActionButtonsWidget extends StatelessWidget {
               elevation: 0,
             ),
             child: Text(
-              'Save to journal',
+              saveLabel,
               style: ThemeTextStyles.labelMedium(context).copyWith(
                 color: AppColors.whiteTextColor,
               ),
@@ -58,7 +62,7 @@ class ActionButtonsWidget extends StatelessWidget {
               ),
             ),
             child: Text(
-              'Talk again',
+              talkAgainLabel,
               style: ThemeTextStyles.labelMedium(context).copyWith(
                 color: AppColors.primary,
               ),
