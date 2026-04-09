@@ -34,7 +34,7 @@ class MoodRepositoryImpl implements MoodRepository {
         'thoughts': thoughts,
       });
 
-      await _local.addEntry(model);
+      await _local.addEntry(model, userId: _currentUserId);
 
       _logger.i('Response generated and cached: id=${model.id}');
       return Right(model.toEntity());
@@ -62,7 +62,7 @@ class MoodRepositoryImpl implements MoodRepository {
         createdAt: DateTime.now(),
       );
 
-      await _local.addEntry(localEntry);
+      await _local.addEntry(localEntry, userId: _currentUserId);
       _logger.i('Local entry cached');
       return Right(localEntry.toEntity());
     } catch (e) {
@@ -84,7 +84,7 @@ class MoodRepositoryImpl implements MoodRepository {
           .where((m) => m.userId == _currentUserId)
           .toList();
 
-      await _local.cacheHistory(userModels);
+      await _local.cacheHistory(userModels, userId: _currentUserId);
 
       _logger.i('Fetched ${userModels.length} entries for current user');
       return Right(userModels.map((m) => m.toEntity()).toList());
@@ -101,7 +101,7 @@ class MoodRepositoryImpl implements MoodRepository {
   @override
   Future<Either<Failure, void>> deleteEntry(int id) async {
     try {
-      await _local.deleteEntry(id);
+      await _local.deleteEntry(id, userId: _currentUserId);
       _logger.i('Entry deleted from cache: id=$id');
       return const Right(null);
     } catch (e) {
@@ -113,7 +113,7 @@ class MoodRepositoryImpl implements MoodRepository {
   @override
   Future<Either<Failure, void>> deleteAllEntries() async {
     try {
-      await _local.deleteAllEntries();
+      await _local.deleteAllEntries(userId: _currentUserId);
       _logger.i('All entries deleted from cache');
       return const Right(null);
     } catch (e) {
@@ -123,10 +123,7 @@ class MoodRepositoryImpl implements MoodRepository {
   }
 
   Either<Failure, List<MoodEntryEntity>> _fallbackToCache(Failure failure) {
-    final cached = _local
-        .getCachedHistory()
-        .where((e) => e.userId == _currentUserId)
-        .toList();
+    final cached = _local.getCachedHistory(userId: _currentUserId);
     if (cached.isNotEmpty) {
       _logger.i('Returning ${cached.length} cached entries for current user');
       return Right(cached.map((m) => m.toEntity()).toList());

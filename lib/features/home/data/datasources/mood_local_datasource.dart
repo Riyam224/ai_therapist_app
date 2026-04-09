@@ -4,13 +4,15 @@ import '../models/mood_entry_model.dart';
 
 class MoodLocalDatasource {
   static const String boxName = 'mood_cache';
-  static const String _entriesKey = 'entries';
 
   Box<String> get _box => Hive.box<String>(boxName);
 
-  /// Get cached mood entries
-  List<MoodEntryModel> getCachedHistory() {
-    final jsonStr = _box.get(_entriesKey);
+  /// Per-user Hive key so entries never bleed between accounts on the same device
+  String _key(String userId) => 'entries_$userId';
+
+  /// Get cached mood entries for [userId]
+  List<MoodEntryModel> getCachedHistory({required String userId}) {
+    final jsonStr = _box.get(_key(userId));
     if (jsonStr == null) return [];
     final list = jsonDecode(jsonStr) as List<dynamic>;
     return list
@@ -18,31 +20,32 @@ class MoodLocalDatasource {
         .toList();
   }
 
-  /// Cache the entire list of entries
-  Future<void> cacheHistory(List<MoodEntryModel> entries) async {
+  /// Cache the entire list of entries for [userId]
+  Future<void> cacheHistory(
+      List<MoodEntryModel> entries, {required String userId}) async {
     final encoded = jsonEncode(entries.map((e) => e.toJson()).toList());
-    await _box.put(_entriesKey, encoded);
+    await _box.put(_key(userId), encoded);
   }
 
-  /// Add a new entry, avoiding duplicates by id
-  Future<void> addEntry(MoodEntryModel entry) async {
-    final existing = getCachedHistory();
+  /// Add a new entry for [userId], avoiding duplicates by id
+  Future<void> addEntry(MoodEntryModel entry, {required String userId}) async {
+    final existing = getCachedHistory(userId: userId);
     final updated = [
       entry,
       ...existing.where((e) => e.id != entry.id),
     ];
-    await cacheHistory(updated);
+    await cacheHistory(updated, userId: userId);
   }
 
-  /// Delete an entry by id
-  Future<void> deleteEntry(int id) async {
-    final existing = getCachedHistory();
+  /// Delete an entry by id for [userId]
+  Future<void> deleteEntry(int id, {required String userId}) async {
+    final existing = getCachedHistory(userId: userId);
     final updated = existing.where((e) => e.id != id).toList();
-    await cacheHistory(updated);
+    await cacheHistory(updated, userId: userId);
   }
 
-  /// Clears all cached entries
-  Future<void> deleteAllEntries() async {
-    await _box.delete(_entriesKey);
+  /// Clears all cached entries for [userId]
+  Future<void> deleteAllEntries({required String userId}) async {
+    await _box.delete(_key(userId));
   }
 }
