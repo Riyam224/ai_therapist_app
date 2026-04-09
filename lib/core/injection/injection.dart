@@ -76,7 +76,7 @@ void setupInjection() {
 
   // ── Saved Quotes Repository ──
   sl.registerLazySingleton<SavedQuotesRepository>(
-    () => SavedQuotesRepositoryImpl(sl()),
+    () => SavedQuotesRepositoryImpl(sl(), sl()),
   );
 
   // ── Mood Cubit — singleton so all screens share state ──
