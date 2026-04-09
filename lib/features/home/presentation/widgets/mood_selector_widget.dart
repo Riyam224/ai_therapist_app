@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
-import 'package:ai_therapist_app/core/widgets/emoji_entry_mood.dart';
 
-/// Horizontal list of mood emoji buttons with animated label
+/// Large tappable unicode emoji mood tiles with animated selection highlight
 class MoodSelectorWidget extends StatelessWidget {
   final List<String> emojis;
   final String? selectedEmoji;
@@ -24,34 +23,75 @@ class MoodSelectorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final extra = context.extra;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          height: AppSizes.emojiButtonSize,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: emojis.length,
-            itemBuilder: (context, index) {
-              final emojiPath = emojis[index];
-              return Padding(
-                padding: EdgeInsets.only(right: AppSpacing.spaceLg),
-                child: EmojiEntryMood(
-                  emojiAsset: emojiPath,
-                  isSelected: selectedEmoji == emojiPath,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(emojis.length, (index) {
+            final emoji = emojis[index];
+            final isSelected = selectedEmoji == emoji;
+            final moodColor =
+                (moodColors != null && index < moodColors!.length)
+                    ? moodColors![index]
+                    : extra.primaryColor!;
+
+            return Expanded(
+              child: Padding(
+                padding:
+                    EdgeInsets.only(right: index < emojis.length - 1 ? 8 : 0),
+                child: GestureDetector(
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    onEmojiSelected(emojiPath);
+                    onEmojiSelected(emoji);
                   },
-                  moodColor: moodColors != null && index < moodColors!.length
-                      ? moodColors![index]
-                      : null,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    height: AppSizes.emojiButtonSize * 1.4,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? moodColor.withValues(alpha: 0.15)
+                          : extra.cardBackgroundColor,
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.borderRadiusMd),
+                      border: Border.all(
+                        color: isSelected
+                            ? moodColor
+                            : (extra.borderColor ?? Colors.transparent),
+                        width: isSelected ? 2 : 1,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: moodColor.withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        emoji,
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontFamilyFallback: [
+                            'Apple Color Emoji',
+                            'Noto Color Emoji',
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          }),
         ),
-        SizedBox(height: AppSpacing.spaceMd),
+        const SizedBox(height: 12),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           transitionBuilder: (child, animation) => FadeTransition(

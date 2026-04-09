@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
-import '../../../../core/styling/app_assets.dart';
 import '../../../../core/routing/app_routes.dart';
 import '../cubit/mood_cubit.dart';
 import 'mood_selector_widget.dart';
@@ -19,17 +19,10 @@ class MoodInputSection extends StatefulWidget {
 }
 
 class _MoodInputSectionState extends State<MoodInputSection> {
-  String? _selectedEmojiPath;
+  String? _selectedEmoji;
   final TextEditingController _thoughtsController = TextEditingController();
 
-  // 5 illustrated SVG moods shown on the home screen selector
-  static const List<String> _moodEmojis = [
-    AppAssets.moodAwful,
-    AppAssets.moodMeh,
-    AppAssets.moodOkay,
-    AppAssets.moodGood,
-    AppAssets.moodGreat,
-  ];
+  static const List<String> _moodEmojis = ['😢', '😔', '😊', '😃', '🤩'];
 
   static const List<String> _moodLabels = [
     'Feeling awful',
@@ -39,7 +32,6 @@ class _MoodInputSectionState extends State<MoodInputSection> {
     'Amazing!',
   ];
 
-  // Per-emoji tint colors matching the OpenMoji outlined SVG style
   static const List<Color> _moodColors = [
     Color(0xFF2563EB), // Awful  — bold blue
     Color(0xFF525252), // Meh    — dark gray
@@ -48,24 +40,24 @@ class _MoodInputSectionState extends State<MoodInputSection> {
     Color(0xFF6D28D9), // Great  — bold purple
   ];
 
-  /// Maps asset path → unicode emoji character sent to the API
-  static const Map<String, String> _emojiUnicodeMap = {
-    AppAssets.moodAwful: '😢',
-    AppAssets.moodMeh:   '😔',
-    AppAssets.moodOkay:  '😊',
-    AppAssets.moodGood:  '😃',
-    AppAssets.moodGreat: '🤩',
-  };
+  static const List<String> _lowMoods = ['😢', '😔', '😩', '😰', '😭', '😑', '🙁'];
 
-  static const List<String> _lowMoods = [
-    '😔',
-    '😢',
-    '😩',
-    '😰',
-    '😭',
-    '😑',
-    '🙁',
-  ];
+  String _thoughtsLabel(String? emoji) {
+    switch (emoji) {
+      case '😢':
+        return 'What\'s weighing on you?';
+      case '😔':
+        return 'What\'s been on your mind?';
+      case '😊':
+        return 'What\'s going on today?';
+      case '😃':
+        return 'What\'s making you feel good?';
+      case '🤩':
+        return 'What\'s making you smile?';
+      default:
+        return 'Tell me what\'s going on...';
+    }
+  }
 
   @override
   void dispose() {
@@ -73,14 +65,14 @@ class _MoodInputSectionState extends State<MoodInputSection> {
     super.dispose();
   }
 
-  void _onEmojiSelected(String emojiPath) {
-    setState(() => _selectedEmojiPath = emojiPath);
+  void _onEmojiSelected(String emoji) {
+    setState(() => _selectedEmoji = emoji);
   }
 
   void _onTalkToLuna() {
     final thoughts = _thoughtsController.text.trim();
 
-    if (_selectedEmojiPath == null) {
+    if (_selectedEmoji == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select your mood first'),
@@ -102,7 +94,7 @@ class _MoodInputSectionState extends State<MoodInputSection> {
 
     HapticFeedback.mediumImpact();
 
-    final emojiUnicode = _emojiUnicodeMap[_selectedEmojiPath] ?? '😊';
+    final emojiUnicode = _selectedEmoji!;
 
     if (_lowMoods.contains(emojiUnicode)) {
       context.read<MoodCubit>().addLocalEntry(
@@ -114,7 +106,7 @@ class _MoodInputSectionState extends State<MoodInputSection> {
       context.push(
         AppRoutes.response,
         extra: {
-          'emojiPath': _selectedEmojiPath,
+          'emojiPath': null,
           'emojiUnicode': emojiUnicode,
           'thoughts': thoughts,
         },
@@ -124,22 +116,43 @@ class _MoodInputSectionState extends State<MoodInputSection> {
 
   @override
   Widget build(BuildContext context) {
+    final extra = context.extra;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('YOUR MOOD', style: ThemeTextStyles.labelLarge(context)),
+        Text(
+          'How are you feeling today?',
+          style: ThemeTextStyles.bodyMedium(context).copyWith(
+            color: extra.secondaryTextColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         SizedBox(height: AppSpacing.spaceLg),
         MoodSelectorWidget(
           emojis: _moodEmojis,
-          selectedEmoji: _selectedEmojiPath,
+          selectedEmoji: _selectedEmoji,
           onEmojiSelected: _onEmojiSelected,
           moodColors: _moodColors,
-          selectedLabel: _selectedEmojiPath != null
-              ? _moodLabels[_moodEmojis.indexOf(_selectedEmojiPath!)]
+          selectedLabel: _selectedEmoji != null
+              ? _moodLabels[_moodEmojis.indexOf(_selectedEmoji!)]
               : null,
         ),
         SizedBox(height: AppSpacing.sectionSpacingMd),
-        Text('SHARE YOUR THOUGHTS', style: ThemeTextStyles.labelLarge(context)),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _thoughtsLabel(_selectedEmoji),
+              key: ValueKey(_selectedEmoji),
+              style: ThemeTextStyles.bodyMedium(context).copyWith(
+                color: extra.secondaryTextColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
         SizedBox(height: AppSpacing.spaceLg),
         ThoughtsInputWidget(
           controller: _thoughtsController,

@@ -144,6 +144,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
           MoodHistorySuccess(:final entries) => _toUiEntries(context, entries),
           _ => <MoodEntry>[],
         };
+        final hasEntries = state is MoodHistorySuccess && entries.isNotEmpty;
         final showEmpty = state is MoodHistorySuccess && entries.isEmpty;
         final shouldShowConfetti = state is MoodHistorySuccess &&
             entries.length == 1 &&
@@ -175,7 +176,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                 horizontal: AppSpacing.horizontalPaddingLg,
               ),
               sliver: SliverToBoxAdapter(
-                child: GreetingCard(userName: widget.userName),
+                child: GreetingCard(userName: widget.userName, hasEntries: hasEntries),
               ),
             ),
 
