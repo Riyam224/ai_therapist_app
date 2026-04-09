@@ -120,17 +120,18 @@ class SavedQuotesScreen extends StatelessWidget {
                                   false;
                             },
                             onDismissed: (_) {
-                              context
-                                  .read<SavedQuotesCubit>()
-                                  .deleteQuote(quote.id);
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              final cubit = context.read<SavedQuotesCubit>();
+                              final messenger = ScaffoldMessenger.of(context);
+                              final quoteText = quote.text;
+                              final quoteId = quote.id;
+                              cubit.deleteQuote(quoteId);
+                              messenger.showSnackBar(
                                 SnackBar(
                                   content: const Text('Quote deleted'),
+                                  duration: const Duration(seconds: 2),
                                   action: SnackBarAction(
                                     label: 'Undo',
-                                    onPressed: () => context
-                                        .read<SavedQuotesCubit>()
-                                        .saveQuote(quote.text),
+                                    onPressed: () => cubit.saveQuote(quoteText),
                                   ),
                                 ),
                               );
