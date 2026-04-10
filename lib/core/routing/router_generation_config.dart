@@ -11,6 +11,10 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/breathing/presentation/screens/breathing_screen.dart';
 import '../../features/affirmation/presentation/screens/affirmation_screen.dart';
+import '../../features/chat/domain/entities/chat_message.dart';
+import '../../features/chat/domain/repositories/chat_repository.dart';
+import '../../features/chat/presentation/cubit/chat_cubit.dart';
+import '../../features/chat/presentation/screens/chat_screen.dart';
 import '../../features/home/presentation/cubit/mood_cubit.dart';
 import '../../features/home/presentation/cubit/mood_state.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -48,7 +52,13 @@ class RouterGenerationConfig {
   }
 
   static GoRouter goRouter = GoRouter(
-    initialLocation: AppRoutes.breathing,
+    initialLocation: AppRoutes.splash,
+    onException: (context, state, router) {
+      // Supabase OAuth callback deep links (io.supabase.aitherapist://login-callback/...)
+      // are handled by supabase_flutter internally. Redirect to splash so the
+      // auth state listener can navigate once the session is established.
+      router.go(AppRoutes.splash);
+    },
     routes: [
       // Splash
       GoRoute(
@@ -172,6 +182,34 @@ class RouterGenerationConfig {
                 emojiUnicode: emojiUnicode,
                 thoughts: thoughts,
               ),
+            ),
+          );
+        },
+      ),
+
+      GoRoute(
+        name: AppRoutes.chat,
+        path: AppRoutes.chat,
+        pageBuilder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final userId = extra?['userId'] as String? ?? '';
+          final emoji = extra?['emoji'] as String? ?? '😊';
+          final thoughts = extra?['thoughts'] as String? ?? '';
+          final aiResponse = extra?['aiResponse'] as String? ?? '';
+          return _buildTransitionPage(
+            state: state,
+            child: BlocProvider(
+              create: (_) => ChatCubit(
+                repository: sl<ChatRepository>(),
+                userId: userId,
+                initialMessages: [
+                  if (thoughts.isNotEmpty)
+                    ChatMessage(role: 'user', content: thoughts),
+                  if (aiResponse.isNotEmpty)
+                    ChatMessage(role: 'assistant', content: aiResponse),
+                ],
+              ),
+              child: ChatScreen(emoji: emoji),
             ),
           );
         },

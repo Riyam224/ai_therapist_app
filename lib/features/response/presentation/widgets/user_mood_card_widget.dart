@@ -68,6 +68,11 @@ class UserMoodCardWidget extends StatelessWidget {
                   emoji,
                   style: TextStyle(
                     fontFamily: AppFonts.mainFontName,
+                    fontFamilyFallback: const [
+                      'Apple Color Emoji',
+                      'Noto Color Emoji',
+                      'Segoe UI Emoji',
+                    ],
                     fontSize: 32.sp,
                   ),
                 ),

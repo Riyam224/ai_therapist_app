@@ -94,7 +94,7 @@ class _JournalBodyState extends State<_JournalBody> {
               Navigator.of(dialogContext).pop();
               context.read<MoodCubit>().deleteAllEntries();
             },
-            child: const Text('Delete all', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete all', style: TextStyle(color: AppColors.errorColor)),
           ),
         ],
       ),
@@ -459,7 +459,7 @@ class _JournalBodyState extends State<_JournalBody> {
                                           Navigator.of(dialogContext).pop(true),
                                       child: const Text(
                                         'Delete',
-                                        style: TextStyle(color: Colors.red),
+                                        style: TextStyle(color: AppColors.errorColor),
                                       ),
                                     ),
                                   ],
@@ -474,12 +474,12 @@ class _JournalBodyState extends State<_JournalBody> {
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.only(right: 20),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade400,
+                            color: AppColors.errorColor,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(
                             Icons.delete_outline_rounded,
-                            color: Colors.white,
+                            color: AppColors.whiteTextColor,
                             size: 26,
                           ),
                         ),

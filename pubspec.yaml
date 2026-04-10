@@ -70,6 +70,7 @@ flutter:
   assets:
     - .env
     - assets/emojis/
+    - assets/icons/
     - assets/lottie/
 
   fonts:

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/styling/app_colors.dart';
 import '../../../../core/models/mood_entry.dart';
 import 'package:ai_therapist_app/core/widgets/mood_entry_card.dart';
 
@@ -28,12 +29,12 @@ class RecentEntriesList extends StatelessWidget {
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.only(right: 20),
               decoration: BoxDecoration(
-                color: Colors.red.shade400,
+                color: AppColors.errorColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(
                 Icons.delete_outline_rounded,
-                color: Colors.white,
+                color: AppColors.whiteTextColor,
                 size: 26,
               ),
             ),

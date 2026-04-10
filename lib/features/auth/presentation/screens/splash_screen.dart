@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/routing/app_routes.dart';
-import '../../../../core/styling/app_colors.dart';
+import '../../../../core/styling/theme_text_styles.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,8 +32,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: Column(
@@ -45,20 +47,17 @@ class _SplashScreenState extends State<SplashScreen> {
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'LunaTree',
-                style: TextStyle(
-                  fontSize: 32,
+                style: ThemeTextStyles.headlineLarge(context).copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.lightOnBackground,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Your gentle companion',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: AppColors.lightSecondaryText,
+                style: ThemeTextStyles.bodyMedium(context).copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 48),

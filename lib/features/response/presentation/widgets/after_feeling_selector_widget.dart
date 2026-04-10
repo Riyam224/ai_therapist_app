@@ -181,7 +181,7 @@ class _MoodModal extends StatelessWidget {
                   height: 88.w,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0xFFF0ECFF),
+                    color: AppColors.softLavender,
                   ),
                   alignment: Alignment.center,
                   child: img,

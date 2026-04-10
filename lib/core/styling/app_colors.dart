@@ -72,4 +72,36 @@ class AppColors {
   static const Color greyColor = greyTextColor;
   static const Color deepIris = darkSurface;
   static const Color midnight = darkBackground;
+
+  // ── Mood Selector (home screen emoji buttons) ────────────────────────────
+  static const Color moodSelectorAwful = Color(0xFF2563EB);   // Awful  — bold blue
+  static const Color moodSelectorMeh   = Color(0xFF525252);   // Meh    — dark gray
+  static const Color moodSelectorOkay  = Color(0xFF16A34A);   // Okay   — bold green
+  static const Color moodSelectorGood  = Color(0xFFD97706);   // Good   — bold amber
+  static const Color moodSelectorGreat = Color(0xFF6D28D9);   // Great  — bold purple
+
+  // ── Mood SVG tint colors (colorFilter for mood SVG icons) ────────────────
+  static const Color moodAwfulSvg  = breathOutColor;          // soft blue
+  static const Color moodMehSvg    = Color(0xFF6C5CE7);       // purple
+  static const Color moodOkaySvg   = Color(0xFF18A887);       // mint teal
+  static const Color moodGoodSvg   = Color(0xFF9180E8);       // lavender
+  static const Color moodGreatSvg  = Color(0xFFE84393);       // pink
+
+  // ── Settings icon colors (profile settings section) ─────────────────────
+  static const Color settingsModeIconColor   = Color(0xFF7C6FCD);
+  static const Color settingsModeIconBg      = Color(0xFFEEEBFF);
+  static const Color settingsAboutIconColor  = Color(0xFFD45CA0);
+  static const Color settingsAboutIconBg     = Color(0xFFFFEBF5);
+  static const Color settingsPrivacyIconColor = Color(0xFF4CAF50);
+  static const Color settingsPrivacyIconBg   = Color(0xFFE8F5E9);
+
+  // ── Gradient background colors ───────────────────────────────────────────
+  static const Color bannerGradientDarkStart  = Color(0xFF2A2250); // dark weekly banner
+  static const Color bannerGradientLightEnd   = Color(0xFFFFE4D0); // light weekly banner
+  static const Color primaryDarkDeep          = Color(0xFF3D2B8E); // greeting card dark gradient end
+  static const Color softLavender             = Color(0xFFF0ECFF); // after-feeling selector chip
+
+  // ── Brand / functional colors ────────────────────────────────────────────
+  static const Color googleBrandBlue = Color(0xFF4285F4);
+  static const Color warningAmber    = Color(0xFFEF9F27); // password medium strength
 }

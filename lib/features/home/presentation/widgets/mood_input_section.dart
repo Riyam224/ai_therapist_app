@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../../../../core/routing/app_routes.dart';
@@ -33,11 +34,11 @@ class _MoodInputSectionState extends State<MoodInputSection> {
   ];
 
   static const List<Color> _moodColors = [
-    Color(0xFF2563EB), // Awful  — bold blue
-    Color(0xFF525252), // Meh    — dark gray
-    Color(0xFF16A34A), // Okay   — bold green
-    Color(0xFFD97706), // Good   — bold amber
-    Color(0xFF6D28D9), // Great  — bold purple
+    AppColors.moodSelectorAwful,
+    AppColors.moodSelectorMeh,
+    AppColors.moodSelectorOkay,
+    AppColors.moodSelectorGood,
+    AppColors.moodSelectorGreat,
   ];
 
   static const List<String> _lowMoods = ['😢', '😔', '😩', '😰', '😭', '😑', '🙁'];

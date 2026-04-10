@@ -94,8 +94,8 @@ class _WeeklyLetterBannerState extends State<WeeklyLetterBanner>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isDark
-                  ? [const Color(0xFF2A2250), const Color(0xFF1E1A35)]
-                  : [const Color(0xFFFFF0E8), const Color(0xFFFFE4D0)],
+                  ? [AppColors.bannerGradientDarkStart, AppColors.darkSurface]
+                  : [AppColors.lightSurface, AppColors.bannerGradientLightEnd],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

@@ -408,7 +408,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               child: const Icon(
                 Icons.send_rounded,
-                color: Colors.white,
+                color: AppColors.whiteTextColor,
                 size: 20,
               ),
             ),
@@ -474,7 +474,7 @@ class _ChatScreenState extends State<ChatScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: cs.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.whiteTextColor,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),

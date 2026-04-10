@@ -47,7 +47,7 @@ class AuthCubit extends Cubit<AuthState> {
           return AuthUnauthenticated();
         })
         .listen((authState) {
-          if (isClosed || state is AuthLoading) return;
+          if (isClosed) return;
           emit(authState);
           if (authState is AuthAuthenticated) {
             _moodCubit.clearEntries();

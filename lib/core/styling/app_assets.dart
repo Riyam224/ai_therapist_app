@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
 
 class AppAssets {
   static const emojisPath = 'assets/emojis/';
@@ -43,13 +44,21 @@ class AppAssets {
   static const String actionChat = '${emojisPath}chat.png';
   static const String actionHistory = '${emojisPath}book.png';
 
+  // Brand icons
+  static const String googleLogo = 'assets/icons/google_logo.svg';
+
+  // Lottie animations
+  static const String lottiePlant        = 'assets/lottie/plant.json';
+  static const String lottiePlantSprout  = 'assets/lottie/plant_sprout.json';
+  static const String lottieBlooming     = 'assets/lottie/blooming.json';
+
   /// Color tint applied to each mood SVG (colorFilter BlendMode.srcIn).
   static const Map<String, Color> moodSvgColors = {
-    moodAwful: Color(0xFF85B7EB), // soft blue — awful/sad
-    moodMeh:   Color(0xFF6C5CE7), // primary purple — meh/bad
-    moodOkay:  Color(0xFF18A887), // mint green — okay
-    moodGood:  Color(0xFF9180E8), // lavender — good
-    moodGreat: Color(0xFFE84393), // pink — great/amazing
+    moodAwful: AppColors.moodAwfulSvg,
+    moodMeh:   AppColors.moodMehSvg,
+    moodOkay:  AppColors.moodOkaySvg,
+    moodGood:  AppColors.moodGoodSvg,
+    moodGreat: AppColors.moodGreatSvg,
   };
 
   /// Maps unicode emoji characters (as received from the API) to local SVG asset paths.

@@ -1,3 +1,4 @@
+import 'package:ai_therapist_app/core/cubits/theme_cubit.dart';
 import 'package:ai_therapist_app/core/networking/dio_helper.dart';
 import 'package:ai_therapist_app/features/plant/data/repositories/streak_repository.dart';
 import 'package:ai_therapist_app/features/plant/presentation/cubit/plant_cubit.dart';
@@ -31,6 +32,9 @@ import '../../features/quotes/presentation/cubit/saved_quotes_cubit.dart';
 final sl = GetIt.instance;
 
 void setupInjection() {
+  // ── Theme ──
+  sl.registerLazySingleton(() => ThemeCubit());
+
   // ── Dio ──
   sl.registerLazySingleton(() => DioHelper());
 
@@ -103,27 +107,21 @@ void setupInjection() {
   );
 
   sl.registerFactory<PlantCubit>(
-    () => PlantCubit(sl<StreakRepository>()), // no SupabaseClient
+    () => PlantCubit(sl<StreakRepository>()),
   );
 
-  // in your injection_container.dart or service_locator.dart
-
-// DataSource
+  // ── Chat DataSource ──
   sl.registerLazySingleton<ChatRemoteDataSource>(
     () => ChatRemoteDataSourceImpl(dio: sl<DioHelper>().dio!),
   );
 
-// Repository
+  // ── Chat Repository ──
   sl.registerLazySingleton<ChatRepository>(
     () => ChatRepositoryImpl(remoteDataSource: sl()),
   );
 
-// Cubit — factory so each user gets a FRESH instance
-// userId is passed at runtime when navigating to chat screen
+  // ── Chat Cubit — factory; userId + initialMessages passed via GoRouter extra ──
   sl.registerFactory<ChatCubit>(
-    () => ChatCubit(
-      repository: sl(),
-      userId: '', // overridden at screen level
-    ),
+    () => ChatCubit(repository: sl(), userId: ''),
   );
 }

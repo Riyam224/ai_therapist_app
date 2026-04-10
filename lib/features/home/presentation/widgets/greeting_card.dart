@@ -89,7 +89,7 @@ class _GreetingCardState extends State<GreetingCard> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isDark
-                    ? [const Color(0xFF7C5CDB), const Color(0xFF3D2B8E)]
+                    ? [AppColors.primaryDark, AppColors.primaryDarkDeep]
                     : [AppColors.primary, AppColors.primaryContainer],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,

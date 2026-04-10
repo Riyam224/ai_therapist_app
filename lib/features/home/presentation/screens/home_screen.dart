@@ -129,7 +129,7 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
               context.read<MoodCubit>().deleteAllEntries();
             },
             child:
-                const Text('Delete all', style: TextStyle(color: Colors.red)),
+                Text('Delete all', style: TextStyle(color: AppColors.errorColor)),
           ),
         ],
       ),
