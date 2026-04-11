@@ -9,6 +9,7 @@ import '../../../../core/styling/app_colors.dart';
 import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../widgets/breathing_circle.dart';
+// 
 
 class BreathingScreen extends StatefulWidget {
   final String emoji;
