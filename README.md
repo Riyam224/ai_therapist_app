@@ -10,6 +10,27 @@ LunaTree is a Flutter mobile app that acts as an AI-powered mood journal and the
 
 ---
 
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="screenshots/1.png" width="200" alt="Screenshot 1"/></td>
+    <td><img src="screenshots/2.png" width="200" alt="Screenshot 2"/></td>
+    <td><img src="screenshots/3.png" width="200" alt="Screenshot 3"/></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/4.png" width="200" alt="Screenshot 4"/></td>
+    <td><img src="screenshots/5.png" width="200" alt="Screenshot 5"/></td>
+    <td><img src="screenshots/6.png" width="200" alt="Screenshot 6"/></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/7.png" width="200" alt="Screenshot 7"/></td>
+    <td><img src="screenshots/9.png" width="200" alt="Screenshot 9"/></td>
+  </tr>
+</table>
+
+---
+
 ## Features
 
 | Feature | Description |
