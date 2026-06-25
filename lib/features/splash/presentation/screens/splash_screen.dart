@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import '../../../../core/routing/app_routes.dart';
@@ -26,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigate() async {
     await Future.delayed(SplashConstants.navigationDelay);
     if (!mounted) return;
-    context.go(AppRoutes.loginScreen);
+    context.go(AppRoutes.onBoarding);
   }
 
   @override
@@ -86,12 +87,14 @@ class _SplashScreenState extends State<SplashScreen> {
           // ── Content ────────────────────────────────────────────────────
           SafeArea(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
                     height: size.height * SplashConstants.topSpacerFraction),
                 Text(
                   AppStrings.appName,
-                  style: AppTextStyles.displayLarge(context),
+                  style: AppTextStyles.displayLarge(context)
+                      .copyWith(fontSize: SplashConstants.titleFontSize.sp),
                 ),
                 SizedBox(
                   height: size.height *

@@ -1,6 +1,7 @@
 import 'package:ai_therapist_app/core/injection/injection.dart';
 import 'package:ai_therapist_app/core/routing/app_routes.dart';
 import 'package:ai_therapist_app/core/navigation/main_shell_screen.dart';
+import 'package:ai_therapist_app/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -67,6 +68,16 @@ class RouterGenerationConfig {
         ),
       ),
 
+// onboarding
+      // Auth
+      GoRoute(
+        name: AppRoutes.onBoarding,
+        path: AppRoutes.onBoarding,
+        pageBuilder: (context, state) => _buildTransitionPage(
+          state: state,
+          child: const OnboardingScreen(),
+        ),
+      ),
       // Auth
       GoRoute(
         name: AppRoutes.loginScreen,

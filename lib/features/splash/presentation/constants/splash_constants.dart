@@ -30,10 +30,13 @@ class SplashConstants {
   static const double blobEdgeOffsetFactor = 0.35;
 
   // Vertical rhythm of the content column, as a fraction of screen height
-  static const double topSpacerFraction = 0.12;
+  static const double topSpacerFraction = 0.15;
   static const double titleToTaglineSpacingFraction = 0.008;
-  static const double taglineToLottieSpacingFraction = 0.06;
+  static const double taglineToLottieSpacingFraction = 0.26;
 
   // Lottie animation width as a fraction of screen width
   static const double lottieWidthFraction = 0.55;
+
+  // App title font size
+  static const double titleFontSize = 60;
 }
