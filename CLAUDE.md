@@ -10,6 +10,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Run the app
 flutter run
 
+# Run on a specific device
+flutter run -d ios
+flutter run -d android
+
 # Run tests
 flutter test
 
@@ -30,7 +34,7 @@ dart run build_runner watch --delete-conflicting-outputs
 
 # Architecture Overview
 
-MindEase is a Flutter AI therapy app. It follows Clean Architecture with strict layer separation: **presentation → domain → data**.
+LunaTree (root widget: `Lueur`) is a Flutter AI therapy app. It follows Clean Architecture with strict layer separation: **presentation → domain → data**.
 
 ## Feature inventory
 
@@ -44,7 +48,7 @@ MindEase is a Flutter AI therapy app. It follows Clean Architecture with strict 
 | `plant` | Streak tracker visualised as a growing plant |
 | `quotes` | Save/delete/view affirmation quotes (Hive) |
 | `affirmation` | Rotating affirmation cards for a selected mood |
-| `breathing` | Guided breathing exercise screen |
+| `breathing` | Guided 4-7-8 breathing exercise screen |
 | `profile` | User settings and saved quotes entry point |
 | `onboarding` | First-launch walkthrough — presentation-only (no domain/data layers) |
 | `splash` | Entry point — decides auth redirect |
@@ -56,19 +60,61 @@ MindEase is a Flutter AI therapy app. It follows Clean Architecture with strict 
 - **`core/networking/dio_helper.dart`** + `api_endpoints.dart` — Dio client wrapping the Railway backend (`https://web-production-f8628.up.railway.app`).
 - **`core/errors/failures.dart`** — `Failure` base class + subtypes (`NetworkFailure`, `ServerFailure`).
 - **`core/models/mood_entry.dart`** — shared `MoodEntry` used in `core/widgets/`.
+- **`core/preferences/onboarding_prefs.dart`** — Hive-backed flag; `hasSeen()` / `markSeen()`. Splash reads this to choose onboarding vs. login.
 - **`core/styling/`** — `AppTheme`, `AppColors`, `AppExtraColors` (ThemeExtension), `AppTextStyles`, `AppFonts`, `AppAssets`.
 - **`core/constants/`** — `AppSizes`, `AppSpacing` (use `flutter_screenutil` `.r`/`.w`/`.h` values).
+
+## Startup sequence
+
+`main()` → `Hive.initFlutter()` → open three boxes (`mood_entries`, `saved_quotes`, theme) → `setupInjection()` → `GoogleFonts.pendingFonts()` → `runApp(Lueur())`.
+
+`SplashScreen.initState` waits a fixed delay then calls `OnboardingPrefs.hasSeen()`:
+- `false` → `context.go(AppRoutes.onBoarding)`
+- `true` → `context.go(AppRoutes.loginScreen)`
+
+## Navigation & shell
+
+Routes are defined in `RouterGenerationConfig.goRouter`. The main app uses `StatefulShellRoute.indexedStack` with three branches: **home / journal / profile**.
+
+- `MoodCubit` is registered as `registerLazySingleton` — it is a **singleton shared across all shell tabs**. It is provided via `BlocProvider.value` inside the shell builder, not re-created per tab. When the user logs out, call `moodCubit.clearEntries()` before navigating away.
+- `AuthCubit` inside the shell listens for `AuthUnauthenticated` and redirects to login.
+- All page transitions use `_buildTransitionPage` (fade + slight upward slide).
+
+**Passing data via GoRouter:** multi-param routes (response, chat) receive `state.extra as Map<String, dynamic>`; single-param routes (breathing, affirmation) receive `state.extra as String`.
 
 ## Data patterns
 
 - **Remote** — `MoodEntryModel` uses `@JsonSerializable()` with a generated `.g.dart` file; run `build_runner` after model changes.
 - **Local** — Hive for mood history (`MoodLocalDatasource`) and saved quotes (`SavedQuotesLocalDatasource`); Hive adapters are also generated via `hive_generator`.
 - **Return type** — repositories and use cases return `Either<Failure, T>` from `dartz`. Cubits fold the `Either` and emit typed states.
+- **Exception — `WeeklyLetterCubit`**: registered with a datasource directly (`sl<MoodRemoteDatasource>()`), not via a use case. This bypasses the normal domain layer; do not follow this pattern for new features.
 
-## Theme
+## Backend API
 
-- Light and dark themes defined in `AppTheme`. Extra semantic colors (mood colours, surface variants) live in `AppExtraColors` — a `ThemeExtension` accessed via `Theme.of(context).extension<AppExtraColors>()`.
-- Fonts: **Urbanist** (primary) and **Nunito** (variable). Urbanist has no emoji glyphs — always include `fontFamilyFallback: ['NotoColorEmoji']` (or system default) in any `TextStyle` that may render emoji.
+Base URL: `https://web-production-f8628.up.railway.app`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/therapist/generate/` | Generate AI response for emoji + thoughts |
+| GET | `/api/therapist/history/?user_id=` | Fetch user's mood history |
+| GET | `/api/therapist/weekly-letter/` | Get AI weekly reflection |
+
+## Theme & typography
+
+Light and dark themes defined in `AppTheme`. Extra semantic colors (mood colours, surface variants) live in `AppExtraColors` — a `ThemeExtension` accessed via `Theme.of(context).extension<AppExtraColors>()`.
+
+**Two text style systems exist — pick the right one:**
+
+| Class | Scaling | When to use |
+|---|---|---|
+| `AppTextStyles` | Own `_scale()` helper: `size * (width / 390).clamp(0.85, 1.2)` | Newer screens (splash, onboarding, auth) |
+| `ThemeTextStyles` | `flutter_screenutil .sp` | Older feature screens (home, journal, etc.) |
+
+**Fonts:**
+- **Nunito** (bundled, primary body/UI) and **DMSerifDisplay** (bundled, display/italic headings)
+- **DM Sans** and **DM Serif Display** also loaded via `GoogleFonts.pendingFonts()` in `main()`
+- `AppFonts.mainFontName` is used in `ThemeTextStyles`
+- `ThemeTextStyles` already includes `fontFamilyFallback` with emoji fallbacks — always include them in any `TextStyle` that may render emoji
 
 ## Onboarding feature
 
@@ -76,18 +122,15 @@ MindEase is a Flutter AI therapy app. It follows Clean Architecture with strict 
 
 Key files:
 - `constants/onboarding_constants.dart` — all sizing fractions, animation durations, and the 3-page content list (`OnboardingConstants.pages`).
-- `models/onboarding_page_data.dart` — `OnboardingPageData` (title, subtitle, icon, blob color, illustration variant) + `OnboardingIllustrationVariant` enum (`glow` / `speechBubble` / `sprout`).
-- `widgets/onboarding_wave_painter.dart` — `CustomPainter` filling the top ~58 % of each page with a colored blob and a bezier bottom edge.
-- `widgets/onboarding_illustration.dart` — icon inside the blob; `speechBubble` variant adds a typing-indicator bubble, `sprout` skips the glow ring.
-- `widgets/onboarding_page_view.dart` — composes painter + illustration + title/subtitle for one page.
-- `widgets/onboarding_page_indicator.dart` — animated pill-dot row.
-- `widgets/onboarding_next_button.dart` — circular CTA; shows a check icon on the last page.
-- `widgets/onboarding_skip_button.dart` — pill-shaped "Skip intro" TextButton, top-right.
-- `screens/onboarding_screen.dart` — `StatefulWidget` owning `PageController`; calls `context.go(AppRoutes.loginScreen)` on finish/skip.
+- `models/onboarding_page_data.dart` — `OnboardingPageData` + `OnboardingIllustrationVariant` enum.
+- `widgets/onboarding_wave_painter.dart` — `CustomPainter` for the blob background.
+- `widgets/onboarding_luna_painter.dart` / `onboarding_luna_animated.dart` — Luna character illustration.
+- `widgets/onboarding_chat_painter.dart` — typing-indicator chat bubble for the `speechBubble` variant.
+- `widgets/onboarding_plant_painter.dart` — sprout illustration for the `sprout` variant.
+- `widgets/onboarding_illustration.dart` — composes the right painter based on `OnboardingIllustrationVariant`.
+- `screens/onboarding_screen.dart` — `StatefulWidget` owning `PageController`; calls `OnboardingPrefs.markSeen()` then `context.go(AppRoutes.loginScreen)` on finish/skip.
 
 **Sizing convention:** uses `MediaQuery.sizeOf(context)` multiplied by fraction constants in `OnboardingConstants` — **not** `flutter_screenutil`. Keep this consistent when editing onboarding UI.
-
-To add a page: append an `OnboardingPageData` to `OnboardingConstants.pages` (add strings to `AppStrings`, colors to `AppColors`). Add a new `OnboardingIllustrationVariant` value and handle it in `OnboardingIllustration.build()` only if a new illustration treatment is needed.
 
 ---
 
@@ -122,8 +165,6 @@ To add a page: append an `OnboardingPageData` to `OnboardingConstants.pages` (ad
 - Any new package must be: latest stable, well-maintained, production-grade
 
 ## 6) Security
-- Never hardcode secrets, tokens, or credentials
-- Never log sensitive information
 - Validate all external and API input
 - Proactively flag security risks when spotted
 
@@ -179,6 +220,7 @@ You MUST proactively suggest the appropriate agent when the situation matches. D
 - Use **`get_it`** (`sl`) as the service locator
 - Register all dependencies in `core/injection/injection.dart` — nowhere else
 - Cubits are `registerFactory`; singletons/services are `registerLazySingleton`
+- **Exception:** `MoodCubit` is `registerLazySingleton` (singleton shared across tabs)
 - Cubits, use cases, and repositories are resolved via `sl<T>()`, not instantiated manually
 
 ## 7) Build Method Discipline (IMPORTANT)

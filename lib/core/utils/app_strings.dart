@@ -49,4 +49,21 @@ class AppStrings {
   static const String passwordStrengthTooShort = 'Too short';
   static const String passwordStrengthGettingThere = 'Getting there';
   static const String passwordStrengthStrong = 'Strong';
+
+  // home — mood type gallery
+  static const String homeMoodGalleryTitle = 'EXPLORE MOODS';
+
+  static const String moodLabelHappy = 'Happy';
+  static const String moodLabelSad = 'Sad';
+  static const String moodLabelAngry = 'Angry';
+  static const String moodLabelAnxious = 'Anxious';
+  static const String moodLabelCalm = 'Calm';
+  static const String moodLabelExcited = 'Excited';
+  static const String moodLabelGrateful = 'Grateful';
+  static const String moodLabelHopeful = 'Hopeful';
+  static const String moodLabelLonely = 'Lonely';
+  static const String moodLabelNeutral = 'Neutral';
+  static const String moodLabelScared = 'Scared';
+  static const String moodLabelBurnout = 'Burnt out';
+  static const String moodLabelContentPeaceful = 'Content & Peaceful';
 }

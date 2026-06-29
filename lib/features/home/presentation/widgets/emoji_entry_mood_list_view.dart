@@ -1,9 +1,12 @@
 import 'package:ai_therapist_app/core/constants/app_sizes.dart';
 import 'package:ai_therapist_app/core/constants/app_spacing.dart';
-import 'package:ai_therapist_app/core/styling/app_assets.dart';
+import 'package:ai_therapist_app/core/models/mood_type.dart';
 import 'package:ai_therapist_app/core/widgets/emoji_entry_mood.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+/// Horizontal gallery of mood illustrations. Tapping a mood pops it and
+/// floats its name above it.
 class EmojiEntryMoodListView extends StatefulWidget {
   const EmojiEntryMoodListView({super.key});
 
@@ -12,44 +15,38 @@ class EmojiEntryMoodListView extends StatefulWidget {
 }
 
 class _EmojiEntryMoodListViewState extends State<EmojiEntryMoodListView> {
-  int? _selectedMoodIndex;
+  MoodType? _selectedMood;
 
-  // List of available mood emojis
-  static const List<String> _moodEmojis = [
-    AppAssets.moodAmazing,
-    AppAssets.moodGood,
-    AppAssets.moodOkay,
-    AppAssets.moodBad,
-    AppAssets.moodAwful,
-    AppAssets.emojiAngry,
-    AppAssets.emojiAnxious,
-    AppAssets.emojiCalm,
-    AppAssets.emojiExcited,
-    AppAssets.emojiTired,
-  ];
-
-  void _onMoodSelected(int index) {
+  void _onMoodTapped(MoodType moodType) {
+    HapticFeedback.lightImpact();
     setState(() {
-      _selectedMoodIndex = _selectedMoodIndex == index ? null : index;
+      _selectedMood = _selectedMood == moodType ? null : moodType;
     });
-    // TODO: Implement theme selection logic based on selected mood
-    debugPrint('Selected mood at index: $index');
   }
 
   @override
   Widget build(BuildContext context) {
+    final listHeight = AppSizes.emojiButtonSize +
+        AppSizes.moodLabelPopupGap +
+        AppSizes.moodLabelPopupHeight;
+
     return SizedBox(
-      height: AppSizes.emojiButtonSize,
+      height: listHeight,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: _moodEmojis.length,
+        clipBehavior: Clip.none,
+        itemCount: MoodType.values.length,
         itemBuilder: (context, index) {
+          final moodType = MoodType.values[index];
           return Padding(
             padding: EdgeInsets.only(right: AppSpacing.spaceXl),
-            child: EmojiEntryMood(
-              emojiAsset: _moodEmojis[index],
-              isSelected: _selectedMoodIndex == index,
-              onTap: () => _onMoodSelected(index),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: EmojiEntryMood(
+                moodType: moodType,
+                isSelected: _selectedMood == moodType,
+                onTap: () => _onMoodTapped(moodType),
+              ),
             ),
           );
         },

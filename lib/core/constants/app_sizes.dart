@@ -32,6 +32,10 @@ class AppSizes {
   static double moodCardSidebarWidth = 4.w;
   static double moodCardSidebarHeight = 60.h;
 
+  // Mood Label Popup (floats above a selected mood emoji)
+  static double moodLabelPopupGap = 8.h;
+  static double moodLabelPopupHeight = 26.h;
+
   // Button Heights
   static double buttonHeightSm = 40.h;
   static double buttonHeightMd = 50.h;

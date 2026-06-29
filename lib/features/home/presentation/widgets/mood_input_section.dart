@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/styling/app_colors.dart';
+import '../../../../core/models/mood_type.dart';
 import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 import '../../../../core/routing/app_routes.dart';
@@ -20,42 +20,36 @@ class MoodInputSection extends StatefulWidget {
 }
 
 class _MoodInputSectionState extends State<MoodInputSection> {
-  String? _selectedEmoji;
+  MoodType? _selectedMood;
   final TextEditingController _thoughtsController = TextEditingController();
 
-  static const List<String> _moodEmojis = ['😢', '😔', '😊', '😃', '🤩'];
+  static const List<MoodType> _moods = MoodType.values;
 
-  static const List<String> _moodLabels = [
-    'Feeling awful',
-    'Feeling meh',
-    'Feeling okay',
-    'Feeling good',
-    'Amazing!',
-  ];
-
-  static const List<Color> _moodColors = [
-    AppColors.moodSelectorAwful,
-    AppColors.moodSelectorMeh,
-    AppColors.moodSelectorOkay,
-    AppColors.moodSelectorGood,
-    AppColors.moodSelectorGreat,
-  ];
-
-  static const List<String> _lowMoods = ['😢', '😔', '😩', '😰', '😭', '😑', '🙁'];
-
-  String _thoughtsLabel(String? emoji) {
-    switch (emoji) {
-      case '😢':
+  String _thoughtsLabel(MoodType? mood) {
+    switch (mood) {
+      case MoodType.sad:
         return 'What\'s weighing on you?';
-      case '😔':
+      case MoodType.lonely:
         return 'What\'s been on your mind?';
-      case '😊':
+      case MoodType.angry:
+        return 'What set this off?';
+      case MoodType.anxious:
+      case MoodType.scared:
+        return 'What\'s worrying you?';
+      case MoodType.burnout:
+        return 'What\'s been draining you?';
+      case MoodType.calm:
+      case MoodType.contentPeaceful:
         return 'What\'s going on today?';
-      case '😃':
+      case MoodType.happy:
+      case MoodType.excited:
         return 'What\'s making you feel good?';
-      case '🤩':
-        return 'What\'s making you smile?';
-      default:
+      case MoodType.grateful:
+        return 'What are you grateful for?';
+      case MoodType.hopeful:
+        return 'What are you looking forward to?';
+      case MoodType.neutral:
+      case null:
         return 'Tell me what\'s going on...';
     }
   }
@@ -67,13 +61,15 @@ class _MoodInputSectionState extends State<MoodInputSection> {
   }
 
   void _onEmojiSelected(String emoji) {
-    setState(() => _selectedEmoji = emoji);
+    setState(() {
+      _selectedMood = _moods.firstWhere((mood) => mood.emoji == emoji);
+    });
   }
 
   void _onTalkToLuna() {
     final thoughts = _thoughtsController.text.trim();
 
-    if (_selectedEmoji == null) {
+    if (_selectedMood == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select your mood first'),
@@ -95,9 +91,10 @@ class _MoodInputSectionState extends State<MoodInputSection> {
 
     HapticFeedback.mediumImpact();
 
-    final emojiUnicode = _selectedEmoji!;
+    final selectedMood = _selectedMood!;
+    final emojiUnicode = selectedMood.emoji;
 
-    if (_lowMoods.contains(emojiUnicode)) {
+    if (selectedMood.isLowMood) {
       context.read<MoodCubit>().addLocalEntry(
         emoji: emojiUnicode,
         thoughts: thoughts,
@@ -131,13 +128,13 @@ class _MoodInputSectionState extends State<MoodInputSection> {
         ),
         SizedBox(height: AppSpacing.spaceLg),
         MoodSelectorWidget(
-          emojis: _moodEmojis,
-          selectedEmoji: _selectedEmoji,
+          emojis: _moods.map((mood) => mood.emoji).toList(),
+          selectedEmoji: _selectedMood?.emoji,
           onEmojiSelected: _onEmojiSelected,
-          moodColors: _moodColors,
-          selectedLabel: _selectedEmoji != null
-              ? _moodLabels[_moodEmojis.indexOf(_selectedEmoji!)]
-              : null,
+          moodColors: _moods.map((mood) => mood.color).toList(),
+          moodBgColors: _moods.map((mood) => mood.bgColor).toList(),
+          illustrationPaths: _moods.map((mood) => mood.assetPath).toList(),
+          selectedLabel: _selectedMood?.label,
         ),
         SizedBox(height: AppSpacing.sectionSpacingMd),
         AnimatedSwitcher(
@@ -145,8 +142,8 @@ class _MoodInputSectionState extends State<MoodInputSection> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              _thoughtsLabel(_selectedEmoji),
-              key: ValueKey(_selectedEmoji),
+              _thoughtsLabel(_selectedMood),
+              key: ValueKey(_selectedMood),
               style: ThemeTextStyles.bodyMedium(context).copyWith(
                 color: extra.secondaryTextColor,
                 fontWeight: FontWeight.w600,

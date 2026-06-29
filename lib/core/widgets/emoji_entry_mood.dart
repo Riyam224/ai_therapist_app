@@ -1,18 +1,23 @@
 import 'package:ai_therapist_app/core/constants/app_sizes.dart';
+import 'package:ai_therapist_app/core/models/mood_type.dart';
 import 'package:ai_therapist_app/core/styling/app_colors.dart';
+import 'package:ai_therapist_app/core/styling/theme_extensions.dart';
+import 'package:ai_therapist_app/core/styling/theme_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+/// A single mood illustration tile. Pops and floats its [MoodType.label]
+/// above itself when selected.
 class EmojiEntryMood extends StatefulWidget {
-  final String emojiAsset;
+  final MoodType moodType;
   final VoidCallback? onTap;
   final bool isSelected;
   final Color? moodColor;
 
   const EmojiEntryMood({
     super.key,
-    required this.emojiAsset,
+    required this.moodType,
     this.onTap,
     this.isSelected = false,
     this.moodColor,
@@ -24,22 +29,20 @@ class EmojiEntryMood extends StatefulWidget {
 
 class _EmojiEntryMoodState extends State<EmojiEntryMood>
     with TickerProviderStateMixin {
-  late final AnimationController _scaleController;
+  late final AnimationController _popController;
   late final AnimationController _rippleController;
   late final Animation<double> _scaleAnim;
-
-  bool get _isSvg => widget.emojiAsset.endsWith('.svg');
 
   @override
   void initState() {
     super.initState();
 
-    _scaleController = AnimationController(
+    _popController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
     _scaleAnim = Tween<double>(begin: 1.0, end: 1.22).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+      CurvedAnimation(parent: _popController, curve: Curves.elasticOut),
     );
 
     _rippleController = AnimationController(
@@ -47,23 +50,23 @@ class _EmojiEntryMoodState extends State<EmojiEntryMood>
       duration: const Duration(milliseconds: 500),
     );
 
-    if (widget.isSelected) _scaleController.forward();
+    if (widget.isSelected) _popController.forward();
   }
 
   @override
   void didUpdateWidget(EmojiEntryMood old) {
     super.didUpdateWidget(old);
     if (widget.isSelected && !old.isSelected) {
-      _scaleController.forward(from: 0);
+      _popController.forward(from: 0);
       _rippleController.forward(from: 0);
     } else if (!widget.isSelected && old.isSelected) {
-      _scaleController.reverse();
+      _popController.reverse();
     }
   }
 
   @override
   void dispose() {
-    _scaleController.dispose();
+    _popController.dispose();
     _rippleController.dispose();
     super.dispose();
   }
@@ -77,16 +80,35 @@ class _EmojiEntryMoodState extends State<EmojiEntryMood>
       child: AnimatedBuilder(
         animation: Listenable.merge([_scaleAnim, _rippleController]),
         builder: (context, child) {
-          return CustomPaint(
-            painter: _RipplePainter(
-              progress: _rippleController.value,
-              color: color,
-              size: AppSizes.emojiButtonSize,
-            ),
-            child: Transform.scale(
-              scale: _scaleAnim.value,
-              child: child,
-            ),
+          final labelOpacity = _popController.value.clamp(0.0, 1.0);
+          return Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.bottomCenter,
+            children: [
+              CustomPaint(
+                painter: _RipplePainter(
+                  progress: _rippleController.value,
+                  color: color,
+                  size: AppSizes.emojiButtonSize,
+                ),
+                child: Transform.scale(
+                  scale: _scaleAnim.value,
+                  child: child,
+                ),
+              ),
+              Positioned(
+                bottom: AppSizes.emojiButtonSize +
+                    AppSizes.moodLabelPopupGap +
+                    AppSizes.moodLabelPopupHeight * (1 - labelOpacity),
+                child: Opacity(
+                  opacity: labelOpacity,
+                  child: _MoodLabelPopup(
+                    label: widget.moodType.label,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
           );
         },
         child: AnimatedContainer(
@@ -103,28 +125,56 @@ class _EmojiEntryMoodState extends State<EmojiEntryMood>
                 ? Border.all(color: color, width: 2.w)
                 : null,
           ),
-          child: Center(
-            child: _isSvg
+          child: ClipOval(
+            child: widget.moodType.assetPath.endsWith('.svg')
                 ? SvgPicture.asset(
-                    widget.emojiAsset,
-                    width: AppSizes.iconLg,
-                    height: AppSizes.iconLg,
-                    fit: BoxFit.contain,
-                    colorFilter: ColorFilter.mode(
-                      widget.isSelected
-                          ? color
-                          : color.withValues(alpha: 0.75),
-                      BlendMode.srcIn,
-                    ),
+                    widget.moodType.assetPath,
+                    width: AppSizes.emojiButtonSize,
+                    height: AppSizes.emojiButtonSize,
+                    fit: BoxFit.cover,
                   )
                 : Image.asset(
-                    widget.emojiAsset,
-                    width: AppSizes.iconLg,
-                    height: AppSizes.iconLg,
-                    fit: BoxFit.contain,
+                    widget.moodType.assetPath,
+                    width: AppSizes.emojiButtonSize,
+                    height: AppSizes.emojiButtonSize,
+                    fit: BoxFit.cover,
                   ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MoodLabelPopup extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _MoodLabelPopup({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: AppSizes.moodLabelPopupHeight,
+      padding: EdgeInsets.symmetric(horizontal: 10.w),
+      decoration: BoxDecoration(
+        color: context.extra.cardBackgroundColor,
+        borderRadius: BorderRadius.circular(AppSizes.borderRadiusCircle),
+        border: Border.all(color: color, width: 1.w),
+        boxShadow: [
+          BoxShadow(
+            color: context.extra.shadowColor ?? Colors.black12,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: ThemeTextStyles.labelSmall(context).copyWith(color: color),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
       ),
     );
   }

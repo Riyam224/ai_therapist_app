@@ -23,7 +23,9 @@
       "Bash(adb -s emulator-5554 install -r build/app/outputs/flutter-apk/app-debug.apk)",
       "Bash(adb -s emulator-5554 shell am start -n com.example.ai_therapist_app/.MainActivity)",
       "Bash(adb -s emulator-5554 shell input tap 540 2172)",
-      "Bash(adb -s emulator-5554 shell input swipe 900 1000 100 1000 400)"
+      "Bash(adb -s emulator-5554 shell input swipe 900 1000 100 1000 400)",
+      "Bash(:)",
+      "Bash(pkill -f \"flutter_tools.snapshot run -d emulator\")"
     ]
   }
 }

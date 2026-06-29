@@ -54,7 +54,9 @@ lib/core/constants/supabase_constants.dart
 .claude/
 .skills/
 .specs/
+.specify/
 .checklists/
 .contracts/
+.agents/
 .speckit/
 *.claude-session

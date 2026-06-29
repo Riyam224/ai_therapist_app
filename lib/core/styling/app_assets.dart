@@ -11,17 +11,27 @@ class AppAssets {
   static const String moodGood = '${emojisPath}mood_good.svg';
   static const String moodGreat = '${emojisPath}mood_great.svg';
 
-  // Legacy PNG aliases kept for non-selector widgets (response card, history, etc.)
-  static const String moodBad = '${emojisPath}confused.png';
-  static const String moodAmazing = '${emojisPath}star-eyes.png';
+  // ── Mood type illustrations (assets/illustrations/) ────────────────────
+  // All ship as PNG with a transparent background (the original SVGs/PNGs
+  // baked their "transparent" background in as an opaque checkerboard).
+  static const illustrationsPath = 'assets/illustrations/';
+  static const String illustrationHappy = '${illustrationsPath}happy.png';
+  static const String illustrationSad = '${illustrationsPath}sad.png';
+  static const String illustrationAngry = '${illustrationsPath}angry.png';
+  static const String illustrationAnxious = '${illustrationsPath}anxious.png';
+  static const String illustrationCalm = '${illustrationsPath}calm.png';
+  static const String illustrationExcited = '${illustrationsPath}excited.png';
+  static const String illustrationGrateful = '${illustrationsPath}grateful.png';
+  static const String illustrationHopeful = '${illustrationsPath}hopeful.png';
+  static const String illustrationLonely = '${illustrationsPath}lonely.png';
+  static const String illustrationNeutral = '${illustrationsPath}neutral.png';
+  static const String illustrationScared = '${illustrationsPath}scared.png';
+  static const String illustrationBurnout = '${illustrationsPath}burnout.png';
+  static const String illustrationContentPeaceful =
+      '${illustrationsPath}content_peaceful.png';
 
   // Additional Emotion Emojis (expanded emotion tracking)
-  static const String emojiAngry = '${emojisPath}angry.png';
-  static const String emojiAnxious = '${emojisPath}anxious.png';
-  static const String emojiCalm = '${emojisPath}calm.png';
   static const String emojiStressed = '${emojisPath}stressed.png';
-  static const String emojiExcited = '${emojisPath}excited.png';
-  static const String emojiTired = '${emojisPath}tired.png';
   static const String emojiFrustrated = '${emojisPath}frustrated.png';
   static const String emojiHopeful = '${emojisPath}hopeful.png';
   static const String emojiLonely = '${emojisPath}lonely.png';

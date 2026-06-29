@@ -121,8 +121,8 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
               Navigator.of(dialogContext).pop();
               context.read<MoodCubit>().deleteAllEntries();
             },
-            child:
-                Text('Delete all', style: TextStyle(color: AppColors.errorColor)),
+            child: Text('Delete all',
+                style: TextStyle(color: AppColors.errorColor)),
           ),
         ],
       ),
@@ -169,7 +169,8 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                 horizontal: AppSpacing.horizontalPaddingLg,
               ),
               sliver: SliverToBoxAdapter(
-                child: GreetingCard(userName: widget.userName, hasEntries: hasEntries),
+                child: GreetingCard(
+                    userName: widget.userName, hasEntries: hasEntries),
               ),
             ),
 
@@ -308,7 +309,8 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                       color: context.extra.cardBackgroundColor,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: context.extra.borderColor ?? AppColors.cardBorder,
+                        color:
+                            context.extra.borderColor ?? AppColors.cardBorder,
                         width: 1.5,
                       ),
                       boxShadow: [

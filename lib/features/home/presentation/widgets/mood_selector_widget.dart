@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/styling/theme_extensions.dart';
 import '../../../../core/styling/theme_text_styles.dart';
 
-/// Large tappable unicode emoji mood tiles with animated selection highlight
+/// Large tappable mood tiles. When [illustrationPaths] is provided each tile
+/// shows an SVG/PNG illustration; otherwise falls back to unicode emoji text.
 class MoodSelectorWidget extends StatelessWidget {
   final List<String> emojis;
   final String? selectedEmoji;
   final ValueChanged<String> onEmojiSelected;
   final List<Color>? moodColors;
   final String? selectedLabel;
+
+  /// Optional illustration asset paths (one per emoji). SVG and PNG supported.
+  final List<String>? illustrationPaths;
+
+  /// Optional per-tile background colors (used in light mode only).
+  final List<Color>? moodBgColors;
 
   const MoodSelectorWidget({
     super.key,
@@ -19,32 +28,62 @@ class MoodSelectorWidget extends StatelessWidget {
     required this.onEmojiSelected,
     this.moodColors,
     this.selectedLabel,
+    this.illustrationPaths,
+    this.moodBgColors,
   });
+
+  Widget _buildIllustration(String path, double size) {
+    if (path.endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+      );
+    }
+    return Image.asset(
+      path,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final extra = context.extra;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasIllustrations = illustrationPaths != null &&
+        illustrationPaths!.length >= emojis.length;
+    final tileHeight =
+        hasIllustrations ? 88.h : AppSizes.emojiButtonSize * 1.4;
+    final tileWidth = tileHeight;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(emojis.length, (index) {
-            final emoji = emojis[index];
-            final isSelected = selectedEmoji == emoji;
-            final moodColor =
-                (moodColors != null && index < moodColors!.length)
-                    ? moodColors![index]
-                    : extra.primaryColor!;
-            // In dark mode use the theme primary (purple) for border/glow
-            // so the selection highlight matches the dark palette
-            final highlightColor =
-                isDark ? extra.primaryColor! : moodColor;
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            children: List.generate(emojis.length, (index) {
+              final emoji = emojis[index];
+              final isSelected = selectedEmoji == emoji;
+              final moodColor =
+                  (moodColors != null && index < moodColors!.length)
+                      ? moodColors![index]
+                      : extra.primaryColor!;
+              final highlightColor = isDark ? extra.primaryColor! : moodColor;
 
-            return Expanded(
-              child: Padding(
+              // In light mode use the onboarding blob color as tile bg;
+              // in dark mode keep the card background.
+              final tileBg = (!isDark &&
+                      moodBgColors != null &&
+                      index < moodBgColors!.length)
+                  ? moodBgColors![index]
+                  : (extra.cardBackgroundColor ?? Colors.white);
+
+              return Padding(
                 padding:
                     EdgeInsets.only(right: index < emojis.length - 1 ? 8 : 0),
                 child: GestureDetector(
@@ -55,11 +94,12 @@ class MoodSelectorWidget extends StatelessWidget {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     curve: Curves.easeOut,
-                    height: AppSizes.emojiButtonSize * 1.4,
+                    width: tileWidth,
+                    height: tileHeight,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? highlightColor.withValues(alpha: 0.15)
-                          : extra.cardBackgroundColor,
+                          ? tileBg
+                          : tileBg.withValues(alpha: isDark ? 1.0 : 0.65),
                       borderRadius:
                           BorderRadius.circular(AppSizes.borderRadiusMd),
                       border: Border.all(
@@ -71,30 +111,38 @@ class MoodSelectorWidget extends StatelessWidget {
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: highlightColor.withValues(alpha: 0.3),
+                                color: highlightColor.withValues(alpha: 0.25),
                                 blurRadius: 10,
                                 offset: const Offset(0, 3),
                               ),
                             ]
                           : null,
                     ),
-                    child: Center(
-                      child: Text(
-                        emoji,
-                        style: const TextStyle(
-                          fontSize: 30,
-                          fontFamilyFallback: [
-                            'Apple Color Emoji',
-                            'Noto Color Emoji',
-                          ],
-                        ),
-                      ),
-                    ),
+                    child: hasIllustrations
+                        ? Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: _buildIllustration(
+                              illustrationPaths![index],
+                              tileHeight * 0.78,
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              emoji,
+                              style: const TextStyle(
+                                fontSize: 30,
+                                fontFamilyFallback: [
+                                  'Apple Color Emoji',
+                                  'Noto Color Emoji',
+                                ],
+                              ),
+                            ),
+                          ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
         ),
         const SizedBox(height: 12),
         AnimatedSwitcher(
